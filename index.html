@@ -77,7 +77,7 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
     <input type="password" id="lockInput2" placeholder="Confirma la clave" autocomplete="off" class="hidden" style="margin-top:8px">
     <div class="lock-err hidden" id="lockErr">Clave incorrecta.</div>
     <button class="btn primary" id="lockBtn" style="width:100%;margin-top:12px">Entrar</button>
-    <button class="btn" id="lockResetBtn" style="width:100%;margin-top:8px;font-size:12px">¿Olvidaste tu clave? Reiniciar panel</button>
+    <button class="btn" id="lockResetBtn" style="width:100%;margin-top:8px;font-size:12px">¿Olvidaste la clave?</button>
   </div>
 </div>
 <div class="shell hidden" id="shell">
@@ -148,41 +148,59 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 const cfg = { base: localStorage.getItem('n8n_base')||'', key: localStorage.getItem('n8n_key')||'' };
 const $ = s => document.querySelector(s);
 
-async function sha256(text){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
 (function initLock(){
   const brandLogo = document.querySelector('.brandRow .logo');
   if(brandLogo) $('#lockLogo').innerHTML = `<img src="${brandLogo.src}" class="logo" alt="Nyra Tech">`;
-  const storedHash = localStorage.getItem('site_pass_hash');
-  const firstTime = !storedHash;
-  if(firstTime){
-    $('#lockTitle').textContent = 'Crea una clave de acceso';
-    $('#lockSub').textContent = 'La necesitarás cada vez que abras este panel.';
-    $('#lockInput2').classList.remove('hidden');
-    $('#lockBtn').textContent = 'Guardar y entrar';
+  const lockBtn = $('#lockBtn');
+  let firstTime = false;
+  lockBtn.disabled = true;
+  function setMode(isFirstTime){
+    firstTime = isFirstTime;
+    $('#lockTitle').textContent = firstTime ? 'Crea una clave de acceso' : 'Ingresa la clave de acceso';
+    $('#lockSub').textContent = firstTime
+      ? 'Esta clave será compartida por todos los navegadores de este servidor.'
+      : 'Ingresa la clave de acceso compartida.';
+    $('#lockInput2').classList.toggle('hidden', !firstTime);
+    lockBtn.textContent = firstTime ? 'Guardar y entrar' : 'Entrar';
   }
-  $('#lockBtn').onclick = async ()=>{
+  fetch('auth.php', {cache:'no-store'}).then(async response=>{
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok || typeof result.configured !== 'boolean') throw new Error('auth');
+    setMode(!result.configured);
+    lockBtn.disabled = false;
+  }).catch(()=>{
+    showLockErr('No se pudo conectar con la autenticación. Abre el panel desde XAMPP y verifica que Apache esté activo.');
+  });
+  lockBtn.onclick = async ()=>{
     const p1 = $('#lockInput').value;
     $('#lockErr').classList.add('hidden');
     if(firstTime){
       const p2 = $('#lockInput2').value;
       if(p1.length < 4){ return showLockErr('La clave debe tener al menos 4 caracteres.'); }
       if(p1 !== p2){ return showLockErr('Las claves no coinciden.'); }
-      localStorage.setItem('site_pass_hash', await sha256(p1));
+    }
+    lockBtn.disabled = true;
+    try{
+      const response = await fetch('auth.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:firstTime?'setup':'verify', password:p1})
+      });
+      const result = await response.json().catch(()=>({}));
+      if(response.status === 409 && result.configured){
+        setMode(false);
+        return showLockErr('La clave ya fue creada. Ingresa la clave compartida.');
+      }
+      if(!response.ok) return showLockErr(result.error || 'No se pudo validar la clave.');
       unlockPanel();
-    } else {
-      if(await sha256(p1) === storedHash){ unlockPanel(); }
-      else showLockErr('Clave incorrecta.');
+    }catch{
+      showLockErr('No se pudo conectar con el servidor de autenticación.');
+    }finally{
+      lockBtn.disabled = false;
     }
   };
   $('#lockResetBtn').onclick = ()=>{
-    if(confirm('Esto borra la clave de acceso y la conexión guardada con n8n en este navegador. ¿Continuar?')){
-      localStorage.clear();
-      location.reload();
-    }
+    alert('La clave es compartida y se guarda en el servidor. Contacta al administrador para restablecerla.');
   };
   function showLockErr(msg){
     $('#lockErr').textContent = msg;
