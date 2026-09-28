@@ -18,8 +18,18 @@ if ($method !== 'GET' && $method !== 'POST') {
     respond(['error' => 'Método no permitido.'], 405);
 }
 
-$authFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
-    . DIRECTORY_SEPARATOR . 'whatsapp-unincca-auth-' . hash('sha256', __DIR__) . '.json';
+$documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: dirname(__DIR__);
+$storageDir = getenv('WHATSAPP_AUTH_DIR');
+if ($storageDir === false || trim($storageDir) === '') {
+    $storageDir = dirname($documentRoot) . DIRECTORY_SEPARATOR . '.whatsapp-unincca-auth';
+}
+if (!is_dir($storageDir) && !@mkdir($storageDir, 0700, true) && !is_dir($storageDir)) {
+    respond(['error' => 'No se pudo crear el almacenamiento privado de autenticación.'], 500);
+}
+@chmod($storageDir, 0700);
+
+$instancePath = realpath(__DIR__) ?: __DIR__;
+$authFile = rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . hash('sha256', $instancePath) . '.json';
 $lockHandle = @fopen($authFile . '.lock', 'c');
 if ($lockHandle === false || !flock($lockHandle, LOCK_EX)) {
     respond(['error' => 'No se pudo acceder al almacenamiento de autenticación.'], 500);
