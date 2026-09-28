@@ -271,10 +271,14 @@ function loadChats(){
   const c = $('#chatsList');
   if(!cfg.base) return needsSetup(c, 'ver el historial');
   c.innerHTML = '<div class="empty">Cargando…</div>';
+
   api('/chats').then(data=>{
+    // Extraer array sin importar si viene en data, data.chats o [ { json: { chats: [] } } ]
     let list = [];
     if (Array.isArray(data)) {
-      list = (data[0] && data[0].chats) ? data[0].chats : data;
+      if (data[0] && data[0].chats) list = data[0].chats;
+      else if (data[0] && data[0].json && data[0].json.chats) list = data[0].json.chats;
+      else list = data;
     } else if (data && data.chats) {
       list = data.chats;
     }
