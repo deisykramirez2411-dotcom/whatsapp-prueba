@@ -164,12 +164,14 @@ const $ = s => document.querySelector(s);
     lockBtn.textContent = firstTime ? 'Guardar y entrar' : 'Entrar';
   }
   fetch('auth.php', {cache:'no-store'}).then(async response=>{
-    const result = await response.json().catch(()=>({}));
-    if(!response.ok || typeof result.configured !== 'boolean') throw new Error('auth');
+    const result = await response.json().catch(()=>null);
+    if(!response.ok) throw new Error(result && result.error ? result.error : `HTTP ${response.status}`);
+    if(!result || typeof result.configured !== 'boolean') throw new Error('auth.php no devolvió una respuesta válida.');
     setMode(!result.configured);
     lockBtn.disabled = false;
-  }).catch(()=>{
-    showLockErr('No se pudo conectar con la autenticación. Abre el panel desde XAMPP y verifica que Apache esté activo.');
+  }).catch(error=>{
+    const detail = error instanceof TypeError ? 'No se pudo contactar auth.php.' : error.message;
+    showLockErr(`${detail} Verifica que auth.php esté publicado junto a index.html, que PHP esté habilitado y que el servidor pueda escribir en la carpeta privada.`);
   });
   lockBtn.onclick = async ()=>{
     const p1 = $('#lockInput').value;
