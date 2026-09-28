@@ -145,7 +145,10 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 </dialog>
 
 <script>
-const cfg = { base: localStorage.getItem('n8n_base')||'', key: localStorage.getItem('n8n_key')||'' };
+const cfg = {
+  base: localStorage.getItem('n8n_base') || 'http://2.25.238.56:5678/webhook/panel',
+  key: localStorage.getItem('n8n_key') || ''
+};
 const $ = s => document.querySelector(s);
 
 (function initLock(){
@@ -269,19 +272,37 @@ function loadChats(){
   if(!cfg.base) return needsSetup(c, 'ver el historial');
   c.innerHTML = '<div class="empty">Cargando…</div>';
   api('/chats').then(data=>{
-    const list = Array.isArray(data) ? data : (data.chats||[]);
-    if(!list.length){ c.innerHTML = '<div class="empty">Todavía no hay conversaciones.</div>'; return; }
+    let list = [];
+    if (Array.isArray(data)) {
+      list = (data[0] && data[0].chats) ? data[0].chats : data;
+    } else if (data && data.chats) {
+      list = data.chats;
+    }
+
+    if(!list || !list.length){
+      c.innerHTML = '<div class="empty">Todavía no hay conversaciones.</div>';
+      return;
+    }
+
     c.innerHTML = '';
     list.forEach(chat=>{
       const card = document.createElement('div');
       card.className = 'card expand';
-      card.innerHTML = `<div class="row"><div><b>${chat.sessionId||chat.name||'Contacto'}</b><div class="chunks">${chat.lastMessage||''}</div></div><span class="pill">${chat.updatedAt? new Date(chat.updatedAt).toLocaleString():''}</span></div><div class="msgs hidden" style="margin-top:10px"></div>`;
+      const sessionTitle = chat.sessionId || chat.name || 'Contacto';
+      const lastMsg = chat.lastMessage || '';
+      const dateStr = chat.updatedAt ? new Date(chat.updatedAt).toLocaleString() : '';
+
+      card.innerHTML = `<div class="row"><div><b>${sessionTitle}</b><div class="chunks">${lastMsg}</div></div><span class="pill">${dateStr}</span></div><div class="msgs hidden" style="margin-top:10px"></div>`;
+
       card.onclick = ()=>{
         const box = card.querySelector('.msgs');
         box.classList.toggle('hidden');
         if(!box.dataset.loaded && chat.messages){
-          box.dataset.loaded='1';
-          box.innerHTML = (chat.messages||[]).map(m=>`<div class="msg"><b>${m.role==='user'?'Cliente':'Agente'}:</b> ${m.content||m.text||''}</div>`).join('') || '<div class="msg">Sin mensajes.</div>';
+          box.dataset.loaded = '1';
+          box.innerHTML = (chat.messages || []).map(m => {
+            const roleLabel = (m.role === 'user' || m.type === 'human') ? 'Cliente' : 'Agente';
+            return `<div class="msg"><b>${roleLabel}:</b> ${m.content || m.text || ''}</div>`;
+          }).join('') || '<div class="msg">Sin mensajes.</div>';
         }
       };
       c.appendChild(card);
