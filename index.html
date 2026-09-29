@@ -18,11 +18,11 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Inter",Segoe UI,sans-serif;min-height:100%}
 .shell{display:flex;min-height:100vh}
-nav{width:220px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto}
+nav{width:248px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
 .brandRow{padding:4px 8px 16px}
 .logo{height:34px;display:block}
-.brandRow .logo{width:min(100%,180px);height:auto;max-height:76px;object-fit:contain;object-position:left center;margin-bottom:14px}
-.brand{font-size:18px;font-weight:700;padding:0 8px 24px;color:var(--text);line-height:1.3}
+.brandRow .logo{width:min(100%,220px);height:auto;max-height:96px;object-fit:contain;object-position:left center;margin:0 0 22px;filter:drop-shadow(0 8px 18px rgba(41,194,230,.16))}
+.brand{font-size:20px;font-weight:700;padding:0 8px 28px;color:var(--text);line-height:1.3;letter-spacing:.1px}
 .brand span{background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
 .tab{display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:4px;border:none;background:none;color:var(--muted);font-size:14px;border-radius:8px;cursor:pointer}
 .tab:hover{background:var(--panel2);color:var(--text)}
@@ -48,11 +48,19 @@ label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .msg{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
 .msg:last-child{border-bottom:none}
 .msg b{color:var(--accent)}
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
-.bar-label{width:220px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-track{flex:1;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden}
-.bar-fill{height:100%;background:var(--brand-grad)}
-.bar-count{width:28px;text-align:right;color:var(--muted)}
+.faq-block{padding:2px 0 20px}
+.faq-block + .faq-block{padding-top:22px;border-top:1px solid var(--line)}
+.faq-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.faq-heading h2{margin:0;font-size:15px;color:var(--text)}
+.faq-heading span{color:var(--muted);font-size:11px}
+.faq-item{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 0;border-bottom:1px solid var(--line)}
+.faq-item:last-child{border-bottom:none}
+.faq-question{color:var(--text);font-size:13px;line-height:1.45}
+.faq-frequency{flex:none;padding:5px 9px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-size:11px;font-weight:700;white-space:nowrap}
+.report-item{padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:7px;background:var(--panel2)}
+.report-item:last-child{margin-bottom:0}
+.report-title{margin:0 0 4px;color:var(--text);font-size:13px;font-weight:600}
+.report-detail{margin:0;color:var(--muted);font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
 .lock-card{width:min(320px,92vw);text-align:center}
 .lock-card h2{font-size:17px;margin:0 0 4px}
@@ -75,8 +83,40 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 input[type="file"]{min-width:0;padding:6px;border:1px dashed var(--line);background:var(--panel2);font-size:12px}
 input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);font:inherit;cursor:pointer}
 .upload-controls .btn{white-space:nowrap}
+.status-tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}
+.status-tab{padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.status-tab:hover{border-color:var(--accent);color:var(--text)}
+.status-tab.active{background:var(--panel2);border-color:var(--accent);color:var(--text);font-weight:600}
+.status-tab[data-train-status="pending"]{border-color:#e2637a;color:#e2637a;font-weight:700}
+.status-tab[data-train-status="completed"]{border-color:#4ade80;color:#4ade80;font-weight:700}
+.status-tab[data-train-status="rejected"]{border-color:#60a5fa;color:#60a5fa;font-weight:700}
+.status-tab[data-train-status="pending"].active{background:rgba(226,99,122,.12);border-color:#e2637a;color:#e2637a}
+.status-tab[data-train-status="completed"].active{background:rgba(74,222,128,.12);border-color:#4ade80;color:#4ade80}
+.status-tab[data-train-status="rejected"].active{background:rgba(96,165,250,.12);border-color:#60a5fa;color:#60a5fa}
+.train-intro{padding:22px 24px;margin-bottom:18px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(135deg,rgba(41,194,230,.12),rgba(201,79,214,.08));box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.train-intro h1{margin-bottom:8px;font-size:26px;letter-spacing:.1px}
+.train-intro .sub{max-width:650px;margin-bottom:0;line-height:1.6}
+.train-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.train-toolbar .status-tabs{margin:0}
+.train-count{color:var(--muted);font-size:12px}
+.train-card{position:relative;overflow:hidden;border-left:3px solid var(--accent2)}
+.train-card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--brand-grad)}
+.train-question{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:15px;line-height:1.5}
+.train-question-mark{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:7px;background:rgba(201,79,214,.16);color:var(--accent2);font-weight:700}
+.train-question-text{padding-top:2px;color:var(--text);font-weight:600}
+.train-answer{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.train-answer label{margin-top:0;color:var(--text);font-weight:600}
+.train-answer textarea{min-height:96px;margin-top:6px;line-height:1.5}
+.train-actions{align-items:center;justify-content:center}
+.train-actions .btn.warn{color:#fff}
+.train-state{font-size:12px;color:var(--muted)}
 .site-footer{margin-top:auto;padding-top:32px;color:var(--muted);font-size:11px;text-align:center}
 @media(max-width:640px){
+  nav{width:100%;height:auto;position:relative;padding:16px 14px}
+  .shell{display:block}
+  main{padding:22px 16px}
+  .brandRow .logo{width:min(100%,210px)}
+  .train-toolbar{align-items:stretch;flex-direction:column}
   .upload-panel{align-items:stretch;flex-direction:column;gap:18px;padding:18px}
   .upload-controls{align-items:stretch;flex-direction:column}
   .upload-controls .btn{width:100%}
@@ -143,8 +183,18 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
     </section>
 
     <section id="view-train" class="hidden">
-      <h1>Autoentrenamiento</h1>
-      <p class="sub">Preguntas que el agente no supo responder porque no están en la documentación. Escribe la respuesta correcta y se añade a la base de conocimiento.</p>
+      <div class="train-intro">
+        <h1>Autoentrenamiento</h1>
+        <p class="sub">Preguntas que el agente no supo responder porque no están en la documentación. Escribe la respuesta correcta y se añade a la base de conocimiento.</p>
+      </div>
+      <div class="train-toolbar">
+        <div class="status-tabs" role="tablist" aria-label="Estado de preguntas">
+          <button class="status-tab active" data-train-status="pending" role="tab">Pendientes</button>
+          <button class="status-tab" data-train-status="completed" role="tab">Completadas</button>
+          <button class="status-tab" data-train-status="rejected" role="tab">Rechazadas</button>
+        </div>
+        <span class="train-count">Base de conocimiento</span>
+      </div>
       <div id="trainList"></div>
     </section>
 
@@ -426,16 +476,82 @@ function loadStats(){
   if(!cfg.base) return needsSetup(c, 'ver las estadísticas');
   c.innerHTML = '<div class="empty">Cargando…</div>';
   api('/stats/faq').then(data=>{
-    const list = Array.isArray(data) ? data : (data.faq||[]);
-    if(!list.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
-    const max = Math.max(...list.map(x=>x.count||0), 1);
-    c.innerHTML = list.slice(0,12).map(x=>`
-      <div class="bar-row">
-        <div class="bar-label" title="${x.question}">${x.question}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round((x.count/max)*100)}%"></div></div>
-        <div class="bar-count">${x.count}</div>
-      </div>`).join('');
+    const list = Array.isArray(data) ? data : (data.faq || data.questions || []);
+    const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
+    if(!list.length && !reports.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
+
+    const questionsBlock = document.createElement('section');
+    questionsBlock.className = 'faq-block';
+    const questionsHeading = document.createElement('div');
+    questionsHeading.className = 'faq-heading';
+    questionsHeading.innerHTML = '<h2>Preguntas más frecuentes</h2><span>Frecuencia de consultas</span>';
+    questionsBlock.appendChild(questionsHeading);
+    if(!list.length){
+      const emptyQuestions = document.createElement('div');
+      emptyQuestions.className = 'empty';
+      emptyQuestions.textContent = 'No hay preguntas frecuentes registradas.';
+      questionsBlock.appendChild(emptyQuestions);
+    }else{
+      list.slice(0,12).forEach(item=>{
+        const row = document.createElement('div');
+        row.className = 'faq-item';
+        const question = document.createElement('div');
+        question.className = 'faq-question';
+        question.textContent = formatChatText(item.question || item.text || item.content || 'Pregunta sin texto');
+        const frequency = document.createElement('span');
+        frequency.className = 'faq-frequency';
+        frequency.textContent = `${item.count || item.frequency || 0} frecuencias`;
+        row.append(question, frequency);
+        questionsBlock.appendChild(row);
+      });
+    }
+
+    const reportsBlock = document.createElement('section');
+    reportsBlock.className = 'faq-block';
+    const reportsHeading = document.createElement('div');
+    reportsHeading.className = 'faq-heading';
+    reportsHeading.innerHTML = '<h2>Reportes</h2><span>Resumen de actividad</span>';
+    reportsBlock.appendChild(reportsHeading);
+    if(!reports.length){
+      const emptyReports = document.createElement('div');
+      emptyReports.className = 'empty';
+      emptyReports.textContent = 'No hay reportes disponibles.';
+      reportsBlock.appendChild(emptyReports);
+    }else{
+      reports.forEach(report=>{
+        const item = typeof report === 'object' ? report : {detail:report};
+        const reportCard = document.createElement('div');
+        reportCard.className = 'report-item';
+        const title = document.createElement('p');
+        title.className = 'report-title';
+        title.textContent = formatChatText(item.title || item.name || item.type || 'Reporte');
+        const detail = document.createElement('p');
+        detail.className = 'report-detail';
+        detail.textContent = formatChatText(item.detail || item.description || item.content || item.text || item.value || '');
+        reportCard.append(title, detail);
+        reportsBlock.appendChild(reportCard);
+      });
+    }
+    c.replaceChildren(questionsBlock, reportsBlock);
   }).catch(()=> errorState(c, 'estadísticas'));
+}
+
+let trainFilter = 'pending';
+
+document.querySelectorAll('[data-train-status]').forEach(button=>{
+  button.onclick = ()=>{
+    trainFilter = button.dataset.trainStatus;
+    document.querySelectorAll('[data-train-status]').forEach(tab=>tab.classList.remove('active'));
+    button.classList.add('active');
+    loadTrain();
+  };
+});
+
+function getTrainStatus(item){
+  const status = String(item.status || item.state || item.estado || '').toLowerCase().trim();
+  if(['completed','complete','completado','completada','resolved','resuelto','trained','entrenado','approved','aprobado'].includes(status)) return 'completed';
+  if(['rejected','rechazado','rechazada','discarded','descartado','dismissed'].includes(status)) return 'rejected';
+  return 'pending';
 }
 
 function loadTrain(){
@@ -450,17 +566,31 @@ function loadTrain(){
       if(value && Array.isArray(value.questions)) return value.questions;
       return value && typeof value === 'object' ? [value] : [];
     });
-    if(!list.length){ c.innerHTML = '<div class="empty">No hay preguntas pendientes. El agente respondió todo con la documentación actual.</div>'; return; }
+    const filteredList = list.filter(item=>getTrainStatus(item) === trainFilter);
+    if(!filteredList.length){
+      const emptyText = trainFilter === 'completed'
+        ? 'No hay preguntas completadas.'
+        : trainFilter === 'rejected'
+          ? 'No hay preguntas rechazadas.'
+          : 'No hay preguntas pendientes. El agente respondió todo con la documentación actual.';
+      c.innerHTML = `<div class="empty">${emptyText}</div>`;
+      return;
+    }
     c.innerHTML = '';
-    list.forEach(item=>{
+    filteredList.forEach(item=>{
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card train-card';
       const question = item.question || item.pendingQuestion || item.userQuestion || item.userMessage || item.text || item.content || item.message || item.input || '';
       const questionText = formatChatText(question) || 'Pregunta sin texto';
       const questionElement = document.createElement('div');
+      questionElement.className = 'train-question';
+      const questionMark = document.createElement('span');
+      questionMark.className = 'train-question-mark';
+      questionMark.textContent = '?';
       const questionTitle = document.createElement('b');
+      questionTitle.className = 'train-question-text';
       questionTitle.textContent = questionText;
-      questionElement.appendChild(questionTitle);
+      questionElement.append(questionMark, questionTitle);
       const dateElement = document.createElement('div');
       dateElement.className = 'chunks';
       dateElement.textContent = item.date ? new Date(item.date).toLocaleString() : '';
@@ -468,15 +598,22 @@ function loadTrain(){
       answerLabel.textContent = 'Respuesta correcta';
       const answerInput = document.createElement('textarea');
       answerInput.placeholder = 'Escribe la respuesta que el agente debería dar';
+      const answerArea = document.createElement('div');
+      answerArea.className = 'train-answer';
+      answerArea.append(answerLabel, answerInput);
       const actions = document.createElement('div');
-      actions.className = 'dlg-foot';
+      actions.className = 'dlg-foot train-actions';
       actions.style.marginTop = '10px';
-      actions.innerHTML = '<button class="btn danger" data-act="discard">Descartar</button><button class="btn warn" data-act="train">Añadir a la base de conocimiento</button>';
-      card.append(questionElement, dateElement, answerLabel, answerInput, actions);
-      card.querySelector('[data-act=discard]').onclick = ()=>{
+      actions.innerHTML = trainFilter === 'pending'
+        ? '<button class="btn danger" data-act="reject">Rechazar</button><button class="btn warn" data-act="train">Añadir a la base de conocimiento</button>'
+        : '<span class="chunks">Estado: ' + (trainFilter === 'completed' ? 'Completada' : 'Rechazada') + '</span>';
+      card.append(questionElement, dateElement, answerArea, actions);
+      const rejectButton = card.querySelector('[data-act=reject]');
+      if(rejectButton) rejectButton.onclick = ()=>{
         api('/pending-questions/discard', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id})}).then(loadTrain);
       };
-      card.querySelector('[data-act=train]').onclick = ()=>{
+      const trainButton = card.querySelector('[data-act=train]');
+      if(trainButton) trainButton.onclick = ()=>{
         const answer = answerInput.value.trim();
         if(!answer) return alert('Escribe una respuesta antes de entrenar al agente.');
         api('/train', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id, question:questionText, answer})})
