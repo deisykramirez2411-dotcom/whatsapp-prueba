@@ -63,6 +63,7 @@ label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .report-detail{margin:0;color:var(--muted);font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
 .lock-card{width:min(320px,92vw);text-align:center}
+.lock-card .logo{display:block;width:min(100%,220px);height:auto;max-height:100px;margin:0 auto 26px;object-fit:contain;filter:drop-shadow(0 8px 18px rgba(41,194,230,.18))}
 .lock-card h2{font-size:17px;margin:0 0 4px}
 .lock-card input{margin-top:10px}
 .lock-err{color:var(--danger);font-size:12px;margin-top:10px}
@@ -226,6 +227,7 @@ const $ = s => document.querySelector(s);
 
 (function initLock(){
   const brandLogo = document.querySelector('.brandRow .logo');
+  if(brandLogo) brandLogo.src = 'logo.png';
   if(brandLogo) $('#lockLogo').innerHTML = `<img src="${brandLogo.src}" class="logo" alt="Nyra Tech">`;
   const lockBtn = $('#lockBtn');
   let firstTime = false;
@@ -294,8 +296,30 @@ function api(path, opts={}){
   if(!cfg.base) return Promise.reject(new Error('NO_CONFIG'));
   const headers = Object.assign({}, opts.headers||{});
   if(cfg.key) headers['Authorization'] = cfg.key;
-  return fetch(cfg.base.replace(/\/$/,'') + path, Object.assign({}, opts, {headers}))
-    .then(r => { if(!r.ok) throw new Error('HTTP_'+r.status); return r.json().catch(()=> ({})); });
+  const url = cfg.base.replace(/\/$/,'') + path;
+  return fetch(url, Object.assign({}, opts, {headers}))
+    .then(async response=>{
+      const raw = await response.text();
+      let data = {};
+      try{ data = raw ? JSON.parse(raw) : {}; }catch{}
+      const message = data.error || data.message || data.details || data.description || raw;
+      if(!response.ok || (data && data.error)){
+        const error = new Error(message || `HTTP ${response.status} en ${path}`);
+        error.status = response.status;
+        error.url = url;
+        error.responseBody = raw;
+        throw error;
+      }
+      return data;
+    });
+}
+
+function formatApiError(error){
+  const lines = [`Mensaje: ${error.message || 'Error desconocido.'}`];
+  if(error.status) lines.push(`HTTP: ${error.status}`);
+  if(error.url) lines.push(`Ruta: ${error.url}`);
+  if(error.responseBody && error.responseBody !== error.message) lines.push(`Respuesta del servidor: ${error.responseBody}`);
+  return lines.join('\n');
 }
 
 function needsSetup(container, action){
@@ -352,6 +376,14 @@ function loadChats(){
       return value && Array.isArray(value.chats) ? value.chats : [value];
     }).filter(chat=>chat && typeof chat === 'object');
 
+    list.sort((first, second)=>{
+      const firstMessage = Array.isArray(first.messages) ? first.messages[first.messages.length - 1] : null;
+      const secondMessage = Array.isArray(second.messages) ? second.messages[second.messages.length - 1] : null;
+      const firstDate = new Date(first.updatedAt || first.date || firstMessage?.updatedAt || firstMessage?.date || 0).getTime();
+      const secondDate = new Date(second.updatedAt || second.date || secondMessage?.updatedAt || secondMessage?.date || 0).getTime();
+      return secondDate - firstDate;
+    });
+
     if(!list || !list.length){
       c.innerHTML = '<div class="empty">Todavía no hay conversaciones.</div>';
       return;
@@ -363,7 +395,8 @@ function loadChats(){
       card.className = 'card expand';
       const firstMessage = Array.isArray(chat.messages) ? chat.messages[0] : null;
       const contact = chat.phoneNumber || chat.phone || chat.contactNumber || chat.waId || chat.from || chat.remoteJid || chat.senderId || chat.sender?.phone || chat.sender?.number || chat.contact?.phone || chat.contact?.number || chat.metadata?.phone || chat.metadata?.from || firstMessage?.from || firstMessage?.phoneNumber || firstMessage?.phone;
-      const contactLabel = contact ? String(contact).replace(/@[^@]+$/, '') : `Contacto ${index + 1}`;
+      const contactNumber = list.length - index;
+      const contactLabel = contact ? String(contact).replace(/@[^@]+$/, '') : `Contacto ${contactNumber}`;
       const lastMsg = chat.lastMessage || (firstMessage && (firstMessage.content || firstMessage.text)) || '';
       const dateStr = chat.updatedAt ? new Date(chat.updatedAt).toLocaleString() : '';
 
@@ -379,7 +412,7 @@ function loadChats(){
       badges.className = 'row';
       const chatId = document.createElement('span');
       chatId.className = 'pill';
-      chatId.textContent = `#${index + 1}`;
+      chatId.textContent = `#${contactNumber}`;
       const date = document.createElement('span');
       date.className = 'pill';
       date.textContent = dateStr;
@@ -476,7 +509,10 @@ function loadStats(){
   if(!cfg.base) return needsSetup(c, 'ver las estadísticas');
   c.innerHTML = '<div class="empty">Cargando…</div>';
   api('/stats/faq').then(data=>{
-    const list = Array.isArray(data) ? data : (data.faq || data.questions || []);
+    const list = (Array.isArray(data) ? data : (data.faq || data.questions || [])).filter(item=>{
+      const question = item && (item.question || item.text || item.content || '');
+      return !isGreetingQuestion(question);
+    });
     const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
     if(!list.length && !reports.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
 
@@ -534,6 +570,17 @@ function loadStats(){
     }
     c.replaceChildren(questionsBlock, reportsBlock);
   }).catch(()=> errorState(c, 'estadísticas'));
+}
+
+function isGreetingQuestion(value){
+  const text = formatChatText(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return /^(hola|holi|hello|hey|buenos dias|buenas tardes|buenas noches|buen dia|buena tarde|buena noche|saludos)(\s|$)/.test(text);
 }
 
 let trainFilter = 'pending';
@@ -617,7 +664,8 @@ function loadTrain(){
         const answer = answerInput.value.trim();
         if(!answer) return alert('Escribe una respuesta antes de entrenar al agente.');
         api('/train', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id, question:questionText, answer})})
-          .then(loadTrain).catch(()=> alert('No se pudo entrenar al agente con esta respuesta.'));
+          .then(loadTrain)
+          .catch(error=> alert(`No se pudo añadir la respuesta.\n\n${formatApiError(error)}`));
       };
       c.appendChild(card);
     });
