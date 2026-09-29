@@ -48,6 +48,13 @@ label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .msg{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
 .msg:last-child{border-bottom:none}
 .msg b{color:var(--accent)}
+.msgs{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-radius:9px;background:var(--bg);cursor:default}
+.msg{max-width:86%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);line-height:1.5;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.msg:last-child{border-bottom:1px solid var(--line)}
+.msg.client{align-self:flex-start;border-left:3px solid var(--accent);border-top-left-radius:4px}
+.msg.agent{align-self:flex-end;border-right:3px solid var(--accent2);border-top-right-radius:4px;background:var(--panel)}
+.msg.client b{color:var(--accent)}
+.msg.agent b{color:var(--accent2)}
 .faq-block{padding:2px 0 20px}
 .faq-block + .faq-block{padding-top:22px;border-top:1px solid var(--line)}
 .faq-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -439,9 +446,10 @@ function loadChats(){
           }
           chatMessages.forEach(message=>{
             const line = document.createElement('div');
-            line.className = 'msg';
+            const isClient = message.role === 'user' || message.type === 'human';
+            line.className = `msg ${isClient ? 'client' : 'agent'}`;
             const role = document.createElement('b');
-            role.textContent = (message.role === 'user' || message.type === 'human') ? 'Cliente: ' : 'Agente: ';
+            role.textContent = isClient ? 'Cliente: ' : 'Agente: ';
             line.append(role, document.createTextNode(formatChatText(message.content || message.text || message.response || message)));
             messages.appendChild(line);
           });
