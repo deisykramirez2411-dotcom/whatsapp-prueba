@@ -41,6 +41,27 @@ h1{font-size:22px;margin:0 0 4px}
 .chat-history-meta .pill{padding:5px 10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;font-weight:600;line-height:1.35;white-space:nowrap}
 .chat-history-meta .chat-meta-number{border-color:var(--accent);color:var(--accent)}
 .chat-history-meta .chat-expand-label{border-color:var(--accent2);color:var(--accent2)}
+.chat-filter-panel{display:grid;grid-template-columns:minmax(240px,1.15fr) minmax(300px,1fr) auto;align-items:end;gap:14px;padding:16px;margin:0 0 12px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px;background:linear-gradient(110deg,rgba(41,194,230,.09),rgba(74,222,128,.05))}
+.chat-filter-field{display:block;margin:0;color:var(--text);font-size:11px;font-weight:600}
+.chat-filter-field input{display:block;margin-top:6px;font-size:13px;border-color:var(--line)}
+.chat-filter-field input[aria-invalid="true"]{border-color:var(--danger)}
+.chat-filter-field input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(41,194,230,.12)}
+.chat-date-range{min-width:0}
+.chat-date-caption{display:block;margin-bottom:6px;color:var(--text);font-size:11px;font-weight:600}
+.chat-date-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.chat-date-inputs .chat-filter-field{color:var(--muted);font-size:10px}
+.chat-filter-panel>.btn{height:37px;padding:8px 12px;border-color:rgba(201,79,214,.5);color:var(--accent2);background:rgba(201,79,214,.06);white-space:nowrap}
+.chat-filter-panel>.btn:hover{border-color:var(--accent2);background:rgba(201,79,214,.12)}
+.chat-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;color:var(--muted);font-size:12px}
+.chat-page-controls{display:flex;align-items:center;gap:8px}
+.chat-page-controls .btn{min-width:36px;padding:6px 10px;font-size:16px;line-height:1}
+.chat-page-controls .btn:disabled{opacity:.4;cursor:not-allowed}
+.chat-page-hidden{display:none!important}
+.docs-search-panel{display:flex;align-items:flex-end;gap:14px;padding:14px;margin:0 0 12px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px;background:linear-gradient(110deg,rgba(41,194,230,.1),rgba(245,158,11,.06))}
+.docs-search-field{display:block;flex:1;margin:0;color:var(--text);font-size:11px;font-weight:600}
+.docs-search-field input{display:block;margin-top:6px}
+.docs-result-count{flex:none;margin:0 0 9px;color:var(--accent);font-size:12px;font-weight:600}
+.docs-search-hidden{display:none!important}
 .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;cursor:pointer}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--brand-grad);color:#fff;border:none;font-weight:600}
@@ -69,6 +90,25 @@ label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
 .faq-item:last-child{border-bottom:none}
 .faq-question{color:var(--text);font-size:13px;line-height:1.45}
 .faq-frequency{flex:none;padding:5px 9px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-size:11px;font-weight:700;white-space:nowrap}
+.faq-frequency-most{border-color:#4ade80;background:rgba(74,222,128,.1);color:#4ade80}
+.faq-frequency-least{border-color:#f59e0b;background:rgba(245,158,11,.1);color:#fbbf24}
+.faq-filter-panel{display:grid;grid-template-columns:minmax(190px,1.15fr) minmax(330px,1.8fr) minmax(150px,.8fr);align-items:end;gap:12px;padding:14px;margin-bottom:12px;border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:8px;background:linear-gradient(110deg,rgba(41,194,230,.08),rgba(201,79,214,.06))}
+.faq-filter-field{display:block;margin:0;color:var(--text);font-size:11px;font-weight:600}
+.faq-filter-field input,.faq-question-select{display:block;width:100%;margin-top:6px;border-color:var(--line);transition:border-color .15s ease,box-shadow .15s ease}
+.faq-filter-field input:focus,.faq-question-select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(41,194,230,.12);outline:none}
+.faq-select-wrap{position:relative;margin-top:6px}
+.faq-question-select{appearance:none;margin-top:0;padding-right:34px;cursor:pointer}
+.faq-select-wrap::after{position:absolute;top:50%;right:14px;width:7px;height:7px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);content:"";pointer-events:none;transform:translateY(-70%) rotate(45deg)}
+.faq-frequency-filter{min-width:0}
+.faq-frequency-filter-label{display:block;margin-bottom:6px;color:var(--text);font-size:11px;font-weight:600}
+.faq-frequency-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.faq-frequency-toggle button{min-height:34px;padding:6px 7px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
+.faq-frequency-toggle button:hover{color:var(--text)}
+.faq-frequency-toggle button[aria-pressed="true"][data-mode="all"]{border-color:var(--accent);background:rgba(41,194,230,.12);color:var(--accent)}
+.faq-frequency-toggle button[aria-pressed="true"][data-mode="most"]{border-color:#4ade80;background:rgba(74,222,128,.12);color:#4ade80}
+.faq-frequency-toggle button[aria-pressed="true"][data-mode="least"]{border-color:#f59e0b;background:rgba(245,158,11,.12);color:#fbbf24}
+.faq-frequency-toggle button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.faq-results-count{margin:0 0 4px;color:var(--accent);font-size:12px;font-weight:600}
 .report-item{padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:7px;background:var(--panel2)}
 .report-item:last-child{margin-bottom:0}
 .report-title{margin:0 0 4px;color:var(--text);font-size:13px;font-weight:600}
@@ -138,6 +178,13 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
   .upload-panel{align-items:stretch;flex-direction:column;gap:18px;padding:18px}
   .upload-controls{align-items:stretch;flex-direction:column}
   .upload-controls .btn{width:100%}
+  .chat-filter-panel{grid-template-columns:1fr}
+  .chat-filter-panel>.btn{width:100%}
+  .chat-date-inputs{gap:8px}
+  .chat-pagination{align-items:flex-start;flex-direction:column}
+  .faq-filter-panel{grid-template-columns:1fr}
+  .docs-search-panel{align-items:stretch;flex-direction:column;gap:4px}
+  .docs-result-count{margin-bottom:0}
 }
 </style>
 </head>
@@ -172,6 +219,32 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
     <section id="view-chats">
       <h1>Historial de chats</h1>
       <p class="sub">Conversaciones recibidas por WhatsApp.</p>
+      <div class="chat-filter-panel" role="search" aria-label="Filtros del historial de chats">
+        <label class="chat-filter-field" for="chatSearch">Buscar en conversaciones
+          <input id="chatSearch" type="search" placeholder="Contacto, mensaje o cualquier dato…" autocomplete="off">
+        </label>
+        <div class="chat-date-range" role="group" aria-label="Rango de fechas">
+          <span class="chat-date-caption">Rango de fechas</span>
+          <div class="chat-date-inputs">
+            <label class="chat-filter-field" for="chatDateFrom">Desde
+              <input id="chatDateFrom" type="text" inputmode="numeric" maxlength="10" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/yyyy" autocomplete="off" title="Escribe la fecha como dd/mm/yyyy">
+            </label>
+            <label class="chat-filter-field" for="chatDateTo">Hasta
+              <input id="chatDateTo" type="text" inputmode="numeric" maxlength="10" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/yyyy" autocomplete="off" title="Escribe la fecha como dd/mm/yyyy">
+            </label>
+          </div>
+        </div>
+        <button class="btn" id="clearChatFilters" type="button">Limpiar filtros</button>
+      </div>
+      <div class="chat-pagination" aria-live="polite">
+        <span id="chatResultsSummary">0 conversaciones</span>
+        <div class="chat-page-controls">
+          <button class="btn" id="chatPreviousPage" type="button" aria-label="Página anterior" title="Página anterior" disabled>‹</button>
+          <span id="chatPageSummary">0 / 0</span>
+          <button class="btn" id="chatNextPage" type="button" aria-label="Página siguiente" title="Página siguiente" disabled>›</button>
+        </div>
+      </div>
+      <div id="chatFilterEmpty" class="empty hidden">No hay conversaciones que coincidan con los filtros.</div>
       <div id="chatsList"></div>
     </section>
 
@@ -191,6 +264,13 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
           <button class="btn primary" id="uploadBtn">Subir documento</button>
         </div>
       </div>
+      <div class="docs-search-panel" role="search" aria-label="Buscar documentos">
+        <label class="docs-search-field" for="docsSearch">Búsqueda general de documentos
+          <input id="docsSearch" type="search" placeholder="Buscar por nombre, origen o contenido…" autocomplete="off">
+        </label>
+        <span class="docs-result-count" id="docsResultCount" aria-live="polite">0 documentos</span>
+      </div>
+      <div id="docsNoResults" class="empty hidden">No hay documentos que coincidan con la búsqueda.</div>
       <div id="docsList"></div>
     </section>
 
@@ -353,6 +433,113 @@ let lastTabSnapshots = { stats:null, train:null };
 let reactiveRefreshRequest = null;
 let isReactiveRefreshActive = false;
 let expandedChatIds = new Set();
+let chatPageIndex = 0;
+const chatPageSize = 20;
+
+function normalizeChatSearch(value){
+  return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function parseChatDate(value){
+  if(value == null || value === '') return null;
+  if(typeof value === 'number'){
+    const timestamp = new Date(value < 100000000000 ? value * 1000 : value);
+    return Number.isNaN(timestamp.getTime()) ? null : timestamp;
+  }
+  const text = String(value).trim();
+  if(/^\d{10,13}$/.test(text)) return parseChatDate(Number(text));
+  const dayFirst = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+  if(dayFirst){
+    const day = Number(dayFirst[1]);
+    const month = Number(dayFirst[2]);
+    const year = Number(dayFirst[3]);
+    let hour = Number(dayFirst[4] || 0);
+    const minute = Number(dayFirst[5] || 0);
+    const second = Number(dayFirst[6] || 0);
+    const meridiem = dayFirst[7]?.toUpperCase();
+    if(meridiem){
+      if(hour < 1 || hour > 12) return null;
+      hour = hour % 12 + (meridiem === 'PM' ? 12 : 0);
+    }
+    const parsed = new Date(year, month - 1, day, hour, minute, second);
+    if(parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day || minute > 59 || second > 59) return null;
+    return parsed;
+  }
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseChatDateFilter(value){
+  const match = String(value || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(!match) return '';
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+  if(parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) return '';
+  return `${year}-${match[2]}-${match[1]}`;
+}
+
+function getChatActivityTimestamp(chat){
+  const chatDates = [chat.updatedAt, chat.lastUpdated, chat.lastMessageAt, chat.last_message_at, chat.date, chat.createdAt, chat.timestamp];
+  const messageDates = Array.isArray(chat.messages)
+    ? chat.messages.flatMap(message=>[message?.updatedAt, message?.date, message?.timestamp, message?.createdAt, message?.sentAt])
+    : [];
+  return [...chatDates, ...messageDates].reduce((latest, value)=>{
+    const parsed = parseChatDate(value);
+    return parsed ? Math.max(latest, parsed.getTime()) : latest;
+  }, 0);
+}
+
+function applyChatFilters(resetPage=false){
+  const container = $('#chatsList');
+  const cards = Array.from(container.querySelectorAll('.chat-history-card'));
+  const search = normalizeChatSearch($('#chatSearch').value.trim());
+  const dateFromInput = $('#chatDateFrom');
+  const dateToInput = $('#chatDateTo');
+  const dateFromValue = dateFromInput.value.trim();
+  const dateToValue = dateToInput.value.trim();
+  const dateFrom = parseChatDateFilter(dateFromValue);
+  const dateTo = parseChatDateFilter(dateToValue);
+  const invalidDateFrom = Boolean(dateFromValue && !dateFrom);
+  const invalidDateTo = Boolean(dateToValue && !dateTo);
+  dateFromInput.setAttribute('aria-invalid', String(invalidDateFrom));
+  dateToInput.setAttribute('aria-invalid', String(invalidDateTo));
+  const filteredCards = cards.filter(card=>{
+    const date = card.dataset.chatDate || '';
+    return !invalidDateFrom && !invalidDateTo
+      && (!search || card.dataset.searchText.includes(search))
+      && (!dateFrom || (date && date >= dateFrom))
+      && (!dateTo || (date && date <= dateTo));
+  });
+  const pageCount = Math.ceil(filteredCards.length / chatPageSize);
+  if(resetPage) chatPageIndex = 0;
+  if(pageCount && chatPageIndex >= pageCount) chatPageIndex = pageCount - 1;
+  const pageStart = chatPageIndex * chatPageSize;
+  const visibleCards = new Set(filteredCards.slice(pageStart, pageStart + chatPageSize));
+  cards.forEach(card=>card.classList.toggle('chat-page-hidden', !visibleCards.has(card)));
+
+  const filterEmpty = $('#chatFilterEmpty');
+  filterEmpty.classList.toggle('hidden', cards.length === 0 || filteredCards.length > 0);
+  const firstResult = filteredCards.length ? pageStart + 1 : 0;
+  const lastResult = Math.min(pageStart + chatPageSize, filteredCards.length);
+  $('#chatResultsSummary').textContent = `Mostrando ${firstResult}-${lastResult} de ${filteredCards.length} conversaciones`;
+  $('#chatPageSummary').textContent = `${pageCount ? chatPageIndex + 1 : 0} / ${pageCount}`;
+  $('#chatPreviousPage').disabled = chatPageIndex === 0 || pageCount === 0;
+  $('#chatNextPage').disabled = pageCount === 0 || chatPageIndex >= pageCount - 1;
+}
+
+$('#chatSearch').addEventListener('input', ()=>applyChatFilters(true));
+$('#chatDateFrom').addEventListener('input', ()=>applyChatFilters(true));
+$('#chatDateTo').addEventListener('input', ()=>applyChatFilters(true));
+$('#clearChatFilters').onclick = ()=>{
+  $('#chatSearch').value = '';
+  $('#chatDateFrom').value = '';
+  $('#chatDateTo').value = '';
+  applyChatFilters(true);
+};
+$('#chatPreviousPage').onclick = ()=>{ if(chatPageIndex > 0){ chatPageIndex--; applyChatFilters(); } };
+$('#chatNextPage').onclick = ()=>{ chatPageIndex++; applyChatFilters(); };
 
 function getChatIdentity(chat){
   if(!chat || typeof chat !== 'object') return '';
@@ -365,7 +552,7 @@ function buildStatsSnapshot(data){
     return !isGreetingQuestion(question);
   });
   return JSON.stringify({
-    faq: list.slice(0,12).map(item=>({
+    faq: list.map(item=>({
       q: item.question || item.text || item.content || '',
       c: item.count || item.frequency || 0
     }))
@@ -402,6 +589,17 @@ function refreshActiveTabIfNeeded(){
       load(activeTab);
     }
   }).catch(()=>{});
+}
+
+let faqFilterState = { search:'', question:'', frequencyMode:'all', minFrequency:'' };
+
+function getFaqQuestion(item){
+  return formatChatText(item.question || item.text || item.content || 'Pregunta sin texto');
+}
+
+function getFaqFrequency(item){
+  const frequency = Number(item.count ?? item.frequency ?? 0);
+  return Number.isFinite(frequency) ? frequency : 0;
 }
 
 function startChatRefresh(){
@@ -492,16 +690,13 @@ function loadChats(){
     const list = extractChatList(data).filter(chat=>chat && typeof chat === 'object');
 
     list.sort((first, second)=>{
-      const firstMessage = Array.isArray(first.messages) ? first.messages[first.messages.length - 1] : null;
-      const secondMessage = Array.isArray(second.messages) ? second.messages[second.messages.length - 1] : null;
-      const firstDate = new Date(first.updatedAt || first.date || firstMessage?.updatedAt || firstMessage?.date || 0).getTime();
-      const secondDate = new Date(second.updatedAt || second.date || secondMessage?.updatedAt || secondMessage?.date || 0).getTime();
-      return secondDate - firstDate;
+      return getChatActivityTimestamp(second) - getChatActivityTimestamp(first);
     });
 
     if(!list || !list.length){
       c.dataset.loading = '0';
       c.innerHTML = '<div class="empty">Todavía no hay conversaciones.</div>';
+      applyChatFilters(true);
       return;
     }
 
@@ -510,14 +705,20 @@ function loadChats(){
     list.forEach((chat,index)=>{
       const chatKey = getChatIdentity(chat);
       const card = document.createElement('div');
-      card.className = 'card expand';
+      card.className = 'card expand chat-history-card';
+      card.dataset.searchText = normalizeChatSearch(JSON.stringify(chat));
       const lastMessage = Array.isArray(chat.messages) ? chat.messages[chat.messages.length - 1] : null;
       const phoneValue = chat.phoneNumber || chat.phone || chat.contactNumber || chat.waId || chat.from || chat.remoteJid || chat.senderId || chat.sender?.phone || chat.sender?.number || chat.contact?.phone || chat.contact?.number || chat.contact?.phoneNumber || chat.metadata?.phone || chat.metadata?.from || lastMessage?.from || lastMessage?.phoneNumber || lastMessage?.phone;
       const phoneNumber = phoneValue ? String(phoneValue).replace(/@[^@]+$/, '') : '';
-      const dateValue = chat.updatedAt || chat.date || chat.lastUpdated || lastMessage?.updatedAt || lastMessage?.date || lastMessage?.timestamp;
-      const parsedDate = dateValue ? new Date(dateValue) : null;
+      const activityTimestamp = getChatActivityTimestamp(chat);
+      const parsedDate = activityTimestamp ? new Date(activityTimestamp) : null;
       const hasValidDate = parsedDate && !Number.isNaN(parsedDate.getTime());
-      const dateStr = hasValidDate ? parsedDate.toLocaleDateString() : 'Sin fecha';
+      card.dataset.chatDate = hasValidDate
+        ? `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`
+        : '';
+      const dateStr = hasValidDate
+        ? `${String(parsedDate.getDate()).padStart(2,'0')}/${String(parsedDate.getMonth() + 1).padStart(2,'0')}/${parsedDate.getFullYear()}`
+        : 'Sin fecha';
       const timeStr = hasValidDate ? parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Sin hora';
       const isExpanded = previouslyExpanded.has(chatKey);
 
@@ -527,7 +728,7 @@ function loadChats(){
       badges.className = 'row chat-history-meta';
       const chatId = document.createElement('span');
       chatId.className = 'pill chat-meta-number';
-      chatId.textContent = String(index + 1);
+      chatId.textContent = String(list.length - index);
       const phone = document.createElement('span');
       phone.className = 'pill';
       phone.textContent = `Teléfono: ${phoneNumber || 'No disponible'}`;
@@ -604,6 +805,7 @@ function loadChats(){
       }
       c.appendChild(card);
     });
+    applyChatFilters(true);
   }).catch(()=> errorState(c, 'historial de chats'));
 }
 
@@ -629,17 +831,38 @@ function formatChatText(value){
   return template.content.textContent.replace(/\n{3,}/g, '\n\n').trim();
 }
 
+function applyDocsSearch(){
+  const search = normalizeChatSearch($('#docsSearch').value.trim());
+  const cards = Array.from($('#docsList').querySelectorAll('[data-doc-search]'));
+  let matches = 0;
+  cards.forEach(card=>{
+    const matchesSearch = !search || card.dataset.docSearch.includes(search);
+    card.classList.toggle('docs-search-hidden', !matchesSearch);
+    if(matchesSearch) matches++;
+  });
+  $('#docsResultCount').textContent = `${matches} ${matches === 1 ? 'documento' : 'documentos'}`;
+  $('#docsNoResults').classList.toggle('hidden', cards.length === 0 || matches > 0);
+}
+
+$('#docsSearch').addEventListener('input', applyDocsSearch);
+
 function loadDocs(){
   const c = $('#docsList');
   if(!cfg.base) return needsSetup(c, 'gestionar documentos');
   c.innerHTML = '<div class="empty">Cargando…</div>';
   api('/documents').then(data=>{
     const list = Array.isArray(data) ? data : (data.documents||[]);
-    if(!list.length){ c.innerHTML = '<div class="empty">No hay documentos subidos todavía.</div>'; return; }
+    if(!list.length){
+      c.innerHTML = '<div class="empty">No hay documentos subidos todavía.</div>';
+      $('#docsResultCount').textContent = '0 documentos';
+      $('#docsNoResults').classList.add('hidden');
+      return;
+    }
     c.innerHTML = '';
     list.forEach(doc=>{
       const card = document.createElement('div');
       card.className = 'card row';
+      card.dataset.docSearch = normalizeChatSearch(JSON.stringify(doc));
       card.innerHTML = `<div><b>${doc.name||doc.source||'Documento'}</b></div>
       <button class="btn danger" data-act="delete">Eliminar</button>`;
       card.querySelector('[data-act=delete]').onclick = ()=>{
@@ -649,6 +872,7 @@ function loadDocs(){
       };
       c.appendChild(card);
     });
+    applyDocsSearch();
   }).catch(()=> errorState(c, 'documentos'));
 }
 $('#uploadBtn').onclick = ()=>{
@@ -677,25 +901,140 @@ function loadStats(){
     questionsHeading.className = 'faq-heading';
     questionsHeading.innerHTML = '<h2>Preguntas más frecuentes</h2><span>Frecuencia de consultas</span>';
     questionsBlock.appendChild(questionsHeading);
-    if(!list.length){
-      const emptyQuestions = document.createElement('div');
-      emptyQuestions.className = 'empty';
-      emptyQuestions.textContent = 'No hay preguntas frecuentes registradas.';
-      questionsBlock.appendChild(emptyQuestions);
-    }else{
-      list.slice(0,12).forEach(item=>{
+    const filters = document.createElement('div');
+    filters.className = 'faq-filter-panel';
+    const searchLabel = document.createElement('label');
+    searchLabel.className = 'faq-filter-field';
+    searchLabel.textContent = 'Búsqueda general';
+    const searchInput = document.createElement('input');
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Buscar en las preguntas…';
+    searchInput.value = faqFilterState.search;
+    searchInput.autocomplete = 'off';
+    searchLabel.appendChild(searchInput);
+
+    const questionLabel = document.createElement('label');
+    questionLabel.className = 'faq-filter-field faq-question-filter hidden';
+    questionLabel.textContent = 'Filtrar por pregunta';
+    const questionSelect = document.createElement('select');
+    questionSelect.className = 'faq-question-select';
+    const allQuestionsOption = document.createElement('option');
+    allQuestionsOption.value = '';
+    allQuestionsOption.textContent = 'Todas las preguntas';
+    questionSelect.appendChild(allQuestionsOption);
+    const questionOptions = new Set();
+    list.forEach(item=>{
+      const questionText = getFaqQuestion(item);
+      if(questionOptions.has(questionText)) return;
+      questionOptions.add(questionText);
+      const option = document.createElement('option');
+      option.value = questionText;
+      option.textContent = questionText;
+      questionSelect.appendChild(option);
+    });
+    if(questionOptions.has(faqFilterState.question)) questionSelect.value = faqFilterState.question;
+    else faqFilterState.question = '';
+    const questionSelectWrap = document.createElement('div');
+    questionSelectWrap.className = 'faq-select-wrap';
+    questionSelectWrap.appendChild(questionSelect);
+    questionLabel.appendChild(questionSelectWrap);
+
+    const frequencyModeLabel = document.createElement('div');
+    frequencyModeLabel.className = 'faq-filter-field faq-frequency-filter';
+    const frequencyModeTitle = document.createElement('span');
+    frequencyModeTitle.className = 'faq-frequency-filter-label';
+    frequencyModeTitle.textContent = 'Filtrar por frecuencia';
+    const frequencyModeToggle = document.createElement('div');
+    frequencyModeToggle.className = 'faq-frequency-toggle';
+    frequencyModeToggle.setAttribute('role', 'group');
+    frequencyModeToggle.setAttribute('aria-label', 'Filtrar por frecuencia');
+    const frequencyButtons = [];
+    [['all','Todas las frecuencias'],['most','Más frecuentes'],['least','Menos frecuentes']].forEach(([value,label])=>{
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.mode = value;
+      button.textContent = label;
+      button.title = label;
+      button.setAttribute('aria-label', label);
+      button.setAttribute('aria-pressed', String(faqFilterState.frequencyMode === value));
+      button.onclick = ()=>{
+        faqFilterState.frequencyMode = value;
+        frequencyButtons.forEach(frequencyButton=>frequencyButton.setAttribute('aria-pressed', String(frequencyButton === button)));
+        renderQuestions();
+      };
+      frequencyButtons.push(button);
+      frequencyModeToggle.appendChild(button);
+    });
+    frequencyModeLabel.append(frequencyModeTitle, frequencyModeToggle);
+
+    const frequencyLabel = document.createElement('label');
+    frequencyLabel.className = 'faq-filter-field';
+    frequencyLabel.textContent = 'Frecuencia mínima';
+    const frequencyInput = document.createElement('input');
+    frequencyInput.type = 'number';
+    frequencyInput.min = '0';
+    frequencyInput.step = '1';
+    frequencyInput.placeholder = 'Cualquier cantidad';
+    frequencyInput.value = faqFilterState.minFrequency;
+    frequencyLabel.appendChild(frequencyInput);
+    filters.append(searchLabel, questionLabel, frequencyModeLabel, frequencyLabel);
+    questionsBlock.appendChild(filters);
+
+    const resultsCount = document.createElement('p');
+    resultsCount.className = 'faq-results-count';
+    const questionsList = document.createElement('div');
+    const renderQuestions = ()=>{
+      const searchText = normalizeChatSearch(faqFilterState.search.trim());
+      const minFrequency = faqFilterState.minFrequency === '' ? null : Number(faqFilterState.minFrequency);
+      const matchingList = list.filter(item=>{
+        const questionText = getFaqQuestion(item);
+        return (!faqFilterState.question || questionText === faqFilterState.question)
+          && (!searchText || normalizeChatSearch(JSON.stringify(item)).includes(searchText))
+          && (minFrequency === null || getFaqFrequency(item) >= minFrequency);
+      });
+      const frequencies = matchingList.map(getFaqFrequency);
+      const maximumFrequency = frequencies.length ? Math.max(...frequencies) : null;
+      const minimumFrequency = frequencies.length ? Math.min(...frequencies) : null;
+      const filteredList = matchingList.filter(item=>{
+        const frequency = getFaqFrequency(item);
+        if(faqFilterState.frequencyMode === 'most') return frequency === maximumFrequency;
+        if(faqFilterState.frequencyMode === 'least') return frequency === minimumFrequency;
+        return true;
+      }).sort((first, second)=>{
+        const frequencyDifference = getFaqFrequency(first) - getFaqFrequency(second);
+        if(frequencyDifference) return faqFilterState.frequencyMode === 'least' ? frequencyDifference : -frequencyDifference;
+        return getFaqQuestion(first).localeCompare(getFaqQuestion(second));
+      });
+      const modeLabel = faqFilterState.frequencyMode === 'most' ? 'más frecuentes' : faqFilterState.frequencyMode === 'least' ? 'menos frecuentes' : 'coincidencias';
+      resultsCount.textContent = `${filteredList.length} ${filteredList.length === 1 ? 'pregunta' : 'preguntas'} ${modeLabel}`;
+      questionsList.replaceChildren();
+      if(!filteredList.length){
+        const emptyQuestions = document.createElement('div');
+        emptyQuestions.className = 'empty';
+        emptyQuestions.textContent = list.length ? 'No hay preguntas que coincidan con los filtros.' : 'No hay preguntas frecuentes registradas.';
+        questionsList.appendChild(emptyQuestions);
+        return;
+      }
+      filteredList.forEach(item=>{
         const row = document.createElement('div');
         row.className = 'faq-item';
         const question = document.createElement('div');
         question.className = 'faq-question';
-        question.textContent = formatChatText(item.question || item.text || item.content || 'Pregunta sin texto');
+        question.textContent = getFaqQuestion(item);
         const frequency = document.createElement('span');
         frequency.className = 'faq-frequency';
-        frequency.textContent = `${item.count || item.frequency || 0} frecuencias`;
+        if(faqFilterState.frequencyMode === 'most') frequency.classList.add('faq-frequency-most');
+        if(faqFilterState.frequencyMode === 'least') frequency.classList.add('faq-frequency-least');
+        frequency.textContent = `${getFaqFrequency(item)} ${getFaqFrequency(item) === 1 ? 'frecuencia' : 'frecuencias'}`;
         row.append(question, frequency);
-        questionsBlock.appendChild(row);
+        questionsList.appendChild(row);
       });
-    }
+    };
+    searchInput.addEventListener('input', ()=>{ faqFilterState.search = searchInput.value; renderQuestions(); });
+    questionSelect.addEventListener('change', ()=>{ faqFilterState.question = questionSelect.value; renderQuestions(); });
+    frequencyInput.addEventListener('input', ()=>{ faqFilterState.minFrequency = frequencyInput.value; renderQuestions(); });
+    questionsBlock.append(resultsCount, questionsList);
+    renderQuestions();
 
     c.replaceChildren(questionsBlock);
   }).catch(()=> errorState(c, 'estadísticas'));
