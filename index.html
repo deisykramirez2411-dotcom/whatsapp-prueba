@@ -344,12 +344,93 @@ function errorState(container, action){
   $('#reconnectNow').onclick = openCfg;
 }
 
+let lastTabSnapshots = { stats:null, train:null };
+let reactiveRefreshRequest = null;
+let isReactiveRefreshActive = false;
+let expandedChatIds = new Set();
+
+function getChatIdentity(chat){
+  if(!chat || typeof chat !== 'object') return '';
+  return chat.id || chat.chatId || chat.phoneNumber || chat.phone || chat.contactNumber || chat.remoteJid || chat.waId || chat.senderId || chat.from || chat.metadata?.phone || chat.metadata?.from || JSON.stringify(chat);
+}
+
+function buildStatsSnapshot(data){
+  const list = (Array.isArray(data) ? data : (data.faq || data.questions || [])).filter(item=>{
+    const question = item && (item.question || item.text || item.content || '');
+    return !isGreetingQuestion(question);
+  });
+  const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
+  return JSON.stringify({
+    faq: list.slice(0,12).map(item=>({
+      q: item.question || item.text || item.content || '',
+      c: item.count || item.frequency || 0
+    })),
+    reports: reports.slice(0,12).map(report=>({
+      title: report.title || report.name || report.type || '',
+      detail: report.detail || report.description || report.content || report.text || report.value || ''
+    }))
+  });
+}
+
+function buildTrainSnapshot(data){
+  const items = Array.isArray(data) ? data : [data];
+  const list = items.flatMap(item=>{
+    const value = item && item.json ? item.json : item;
+    if(value && Array.isArray(value.pending)) return value.pending;
+    if(value && Array.isArray(value.questions)) return value.questions;
+    return value && typeof value === 'object' ? [value] : [];
+  });
+  const filteredList = list.filter(item=>getTrainStatus(item) === trainFilter);
+  return JSON.stringify(filteredList.map(item=>({
+    id: item.id || item.uuid || item._id,
+    question: item.question || item.pendingQuestion || item.userQuestion || item.userMessage || item.text || item.content || item.message || item.input || '',
+    answer: item.answer || item.response || item.correctAnswer || item.respuesta || item.answerText || item.finalAnswer || item.resolvedAnswer || ''
+  })));
+}
+
+function refreshActiveTabIfNeeded(){
+  if(!isReactiveRefreshActive || !cfg.base) return;
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+  if(!activeTab || !['stats','train'].includes(activeTab)) return;
+
+  const fetcher = activeTab === 'stats' ? api('/stats/faq') : api('/pending-questions');
+
+  fetcher.then(data=>{
+    const nextSnapshot = activeTab === 'stats' ? buildStatsSnapshot(data) : buildTrainSnapshot(data);
+    if(lastTabSnapshots[activeTab] !== nextSnapshot){
+      lastTabSnapshots[activeTab] = nextSnapshot;
+      load(activeTab);
+    }
+  }).catch(()=>{});
+}
+
+function startChatRefresh(){
+  isReactiveRefreshActive = true;
+  if(reactiveRefreshRequest) return;
+  const tick = ()=>{
+    if(!isReactiveRefreshActive) return;
+    refreshActiveTabIfNeeded();
+    reactiveRefreshRequest = setTimeout(tick, 5000);
+  };
+  tick();
+}
+
+function stopChatRefresh(){
+  isReactiveRefreshActive = false;
+  if(reactiveRefreshRequest){
+    clearTimeout(reactiveRefreshRequest);
+    reactiveRefreshRequest = null;
+  }
+}
+
 document.querySelectorAll('.tab').forEach(t=>{
   t.onclick = ()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
     $('#view-'+t.dataset.tab).classList.remove('hidden');
+    if(['stats','train'].includes(t.dataset.tab)) startChatRefresh();
+    else stopChatRefresh();
     load(t.dataset.tab);
   };
 });
@@ -379,14 +460,36 @@ updateCfgDot();
 function loadChats(){
   const c = $('#chatsList');
   if(!cfg.base) return needsSetup(c, 'ver el historial');
-  c.innerHTML = '<div class="empty">Cargando…</div>';
+  if(!c.dataset.loading){
+    c.innerHTML = '<div class="empty">Cargando…</div>';
+  }
+  const previouslyExpanded = new Set(expandedChatIds);
 
   api('/chats').then(data=>{
-    const items = Array.isArray(data) ? data : [data];
-    const list = items.flatMap(item=>{
-      const value = item && item.json ? item.json : item;
-      return value && Array.isArray(value.chats) ? value.chats : [value];
-    }).filter(chat=>chat && typeof chat === 'object');
+    const extractChatList = (value) => {
+      if(!value || typeof value !== 'object') return [];
+      const candidates = [];
+      const push = (entry) => {
+        if(!entry || typeof entry !== 'object') return;
+        if(Array.isArray(entry)) entry.forEach(push);
+        else candidates.push(entry);
+      };
+      if(Array.isArray(value)) return value.filter(chat=>chat && typeof chat === 'object');
+      if(value.json && typeof value.json === 'object') push(extractChatList(value.json));
+      ['chats','conversations','records','items','data'].forEach(key=>{
+        if(Array.isArray(value[key])) push(value[key]);
+        else if(value[key] && typeof value[key] === 'object') push(extractChatList(value[key]));
+      });
+      if(!candidates.length) push(value);
+      const seen = new Set();
+      return candidates.filter(chat=>{
+        const key = chat.id || chat.chatId || chat.phoneNumber || chat.phone || chat.contactNumber || chat.remoteJid || chat.waId || JSON.stringify(chat);
+        if(!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+    const list = extractChatList(data).filter(chat=>chat && typeof chat === 'object');
 
     list.sort((first, second)=>{
       const firstMessage = Array.isArray(first.messages) ? first.messages[first.messages.length - 1] : null;
@@ -397,12 +500,15 @@ function loadChats(){
     });
 
     if(!list || !list.length){
+      c.dataset.loading = '0';
       c.innerHTML = '<div class="empty">Todavía no hay conversaciones.</div>';
       return;
     }
 
+    c.dataset.loading = '0';
     c.innerHTML = '';
     list.forEach((chat,index)=>{
+      const chatKey = getChatIdentity(chat);
       const card = document.createElement('div');
       card.className = 'card expand';
       const firstMessage = Array.isArray(chat.messages) ? chat.messages[0] : null;
@@ -411,6 +517,7 @@ function loadChats(){
       const contactLabel = contact ? String(contact).replace(/@[^@]+$/, '') : `Contacto ${contactNumber}`;
       const lastMsg = chat.lastMessage || (firstMessage && (firstMessage.content || firstMessage.text)) || '';
       const dateStr = chat.updatedAt ? new Date(chat.updatedAt).toLocaleString() : '';
+      const isExpanded = previouslyExpanded.has(chatKey);
 
       const header = document.createElement('div');
       header.className = 'row';
@@ -431,6 +538,7 @@ function loadChats(){
       const messages = document.createElement('div');
       messages.className = 'msgs hidden';
       messages.style.marginTop = '10px';
+      if(isExpanded) messages.classList.remove('hidden');
 
       summary.append(contactTitle, preview);
       badges.append(chatId, date);
@@ -438,7 +546,13 @@ function loadChats(){
       card.append(header, messages);
 
       card.onclick = ()=>{
-        messages.classList.toggle('hidden');
+        if(messages.classList.contains('hidden')){
+          expandedChatIds.add(chatKey);
+          messages.classList.remove('hidden');
+        }else{
+          expandedChatIds.delete(chatKey);
+          messages.classList.add('hidden');
+        }
         if(!messages.dataset.loaded){
           messages.dataset.loaded = '1';
           const chatMessages = Array.isArray(chat.messages) ? chat.messages : [];
@@ -460,6 +574,27 @@ function loadChats(){
           });
         }
       };
+
+      if(isExpanded && !messages.dataset.loaded){
+        messages.dataset.loaded = '1';
+        const chatMessages = Array.isArray(chat.messages) ? chat.messages : [];
+        if(!chatMessages.length){
+          const emptyMessage = document.createElement('div');
+          emptyMessage.className = 'msg';
+          emptyMessage.textContent = 'Sin mensajes.';
+          messages.appendChild(emptyMessage);
+        }else{
+          chatMessages.forEach(message=>{
+            const line = document.createElement('div');
+            const isClient = message.role === 'user' || message.type === 'human';
+            line.className = `msg ${isClient ? 'client' : 'agent'}`;
+            const role = document.createElement('b');
+            role.textContent = isClient ? 'Cliente: ' : 'Agente: ';
+            line.append(role, document.createTextNode(formatChatText(message.content || message.text || message.response || message)));
+            messages.appendChild(line);
+          });
+        }
+      }
       c.appendChild(card);
     });
   }).catch(()=> errorState(c, 'historial de chats'));
@@ -527,6 +662,7 @@ function loadStats(){
       return !isGreetingQuestion(question);
     });
     const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
+    lastTabSnapshots.stats = buildStatsSnapshot(data);
     if(!list.length && !reports.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
 
     const questionsBlock = document.createElement('section');
@@ -626,6 +762,7 @@ function loadTrain(){
       if(value && Array.isArray(value.questions)) return value.questions;
       return value && typeof value === 'object' ? [value] : [];
     });
+    lastTabSnapshots.train = buildTrainSnapshot(data);
     const filteredList = list.filter(item=>getTrainStatus(item) === trainFilter);
     if(!filteredList.length){
       const emptyText = trainFilter === 'completed'
