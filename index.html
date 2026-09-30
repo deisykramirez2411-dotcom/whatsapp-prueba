@@ -109,12 +109,17 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
 .train-count{color:var(--muted);font-size:12px}
 .train-card{position:relative;overflow:hidden;border-left:3px solid var(--accent2)}
 .train-card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--brand-grad)}
-.train-question{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;font-size:15px;line-height:1.5}
+.train-question{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;font-size:15px;line-height:1.5}
+.train-question-main{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0}
 .train-question-mark{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:7px;background:rgba(201,79,214,.16);color:var(--accent2);font-weight:700}
-.train-question-text{padding-top:2px;color:var(--text);font-weight:600}
+.train-question-text{padding-top:2px;color:var(--text);font-weight:600;word-break:break-word;flex:1}
+.train-question-actions{display:flex;align-items:center;justify-content:flex-end;flex:none}
+.train-edit-btn{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.02);color:var(--text);font-size:16px;cursor:pointer}
+.train-edit-btn:hover{border-color:var(--accent);color:var(--accent)}
 .train-answer{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .train-answer label{margin-top:0;color:var(--text);font-weight:600}
 .train-answer textarea{min-height:96px;margin-top:6px;line-height:1.5}
+.train-answer-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
 .train-actions{align-items:center;justify-content:center}
 .train-actions .btn.warn{color:#fff}
 .train-state{font-size:12px;color:var(--muted)}
@@ -639,13 +644,58 @@ function loadTrain(){
       const questionText = formatChatText(question) || 'Pregunta sin texto';
       const questionElement = document.createElement('div');
       questionElement.className = 'train-question';
+      const questionMain = document.createElement('div');
+      questionMain.className = 'train-question-main';
       const questionMark = document.createElement('span');
       questionMark.className = 'train-question-mark';
       questionMark.textContent = '?';
       const questionTitle = document.createElement('b');
       questionTitle.className = 'train-question-text';
       questionTitle.textContent = questionText;
-      questionElement.append(questionMark, questionTitle);
+      questionMain.append(questionMark, questionTitle);
+      questionElement.append(questionMain);
+      const questionActions = document.createElement('div');
+      questionActions.className = 'train-question-actions';
+      if(trainFilter === 'completed'){
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'train-edit-btn';
+        editButton.title = 'Editar respuesta';
+        editButton.textContent = '✎';
+        editButton.onclick = (event)=>{
+          event.stopPropagation();
+          const currentAnswer = answerArea.querySelector('.train-readonly-answer');
+          const currentValue = currentAnswer ? currentAnswer.textContent : '';
+          const textarea = document.createElement('textarea');
+          textarea.value = currentValue;
+          textarea.placeholder = 'Escribe la respuesta correcta';
+          const actionsRow = document.createElement('div');
+          actionsRow.className = 'train-answer-actions';
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'btn warn';
+          saveBtn.textContent = 'Guardar';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.type = 'button';
+          cancelBtn.className = 'btn';
+          cancelBtn.textContent = 'Cancelar';
+          saveBtn.onclick = ()=>{
+            const newAnswer = textarea.value.trim();
+            if(!newAnswer) return alert('Escribe una respuesta antes de guardar.');
+            api('/train', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id, question:questionText, answer:newAnswer})})
+              .then(loadTrain)
+              .catch(error=> alert(`No se pudo actualizar la respuesta.\n\n${formatApiError(error)}`));
+          };
+          cancelBtn.onclick = ()=> loadTrain();
+          actionsRow.append(cancelBtn, saveBtn);
+          answerArea.innerHTML = '';
+          const answerLabel = document.createElement('label');
+          answerLabel.textContent = 'Respuesta guardada';
+          answerArea.append(answerLabel, textarea, actionsRow);
+        };
+        questionActions.appendChild(editButton);
+      }
+      questionElement.append(questionActions);
       const dateElement = document.createElement('div');
       dateElement.className = 'chunks';
       dateElement.textContent = item.date ? new Date(item.date).toLocaleString() : '';
@@ -662,7 +712,7 @@ function loadTrain(){
         const answerLabel = document.createElement('label');
         answerLabel.textContent = 'Respuesta guardada';
         const answerValue = document.createElement('div');
-        answerValue.className = 'chunks';
+        answerValue.className = 'chunks train-readonly-answer';
         const answerText = (() => {
           const answerKeys = ['answer','response','correctAnswer','respuesta','answerText','finalAnswer','resolvedAnswer','result','output'];
           const fallbackKeys = ['message','content','text'];
