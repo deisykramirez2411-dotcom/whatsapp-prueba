@@ -464,7 +464,7 @@ function formatChatText(value){
   if(value == null) return '';
   if(Array.isArray(value)) return value.map(formatChatText).filter(Boolean).join('\n');
   if(typeof value === 'object'){
-    const nested = value.response ?? value.content ?? value.text ?? value.message ?? value.output ?? value.error;
+    const nested = value.response ?? value.answer ?? value.correctAnswer ?? value.respuesta ?? value.answerText ?? value.content ?? value.text ?? value.message ?? value.output ?? value.error;
     return nested == null ? '' : formatChatText(nested);
   }
 
@@ -649,13 +649,68 @@ function loadTrain(){
       const dateElement = document.createElement('div');
       dateElement.className = 'chunks';
       dateElement.textContent = item.date ? new Date(item.date).toLocaleString() : '';
-      const answerLabel = document.createElement('label');
-      answerLabel.textContent = 'Respuesta correcta';
-      const answerInput = document.createElement('textarea');
-      answerInput.placeholder = 'Escribe la respuesta que el agente debería dar';
       const answerArea = document.createElement('div');
       answerArea.className = 'train-answer';
-      answerArea.append(answerLabel, answerInput);
+
+      if(trainFilter === 'pending'){
+        const answerLabel = document.createElement('label');
+        answerLabel.textContent = 'Respuesta correcta';
+        const answerInput = document.createElement('textarea');
+        answerInput.placeholder = 'Escribe la respuesta que el agente debería dar';
+        answerArea.append(answerLabel, answerInput);
+      } else if(trainFilter === 'completed'){
+        const answerLabel = document.createElement('label');
+        answerLabel.textContent = 'Respuesta guardada';
+        const answerValue = document.createElement('div');
+        answerValue.className = 'chunks';
+        const answerText = (() => {
+          const answerKeys = ['answer','response','correctAnswer','respuesta','answerText','finalAnswer','resolvedAnswer','result','output'];
+          const fallbackKeys = ['message','content','text'];
+          const ignoreKeys = new Set(['question','prompt','userQuestion','pendingQuestion','input','query','textQuestion','questionText','title','name','status','state','estado','date','createdAt','updatedAt','id','contact','chatId','phone']);
+          const isMeaningfulText = (value) => {
+            if(value == null) return false;
+            const str = String(value).trim();
+            if(!str) return false;
+            if(/^\d+$/.test(str)) return false;
+            return true;
+          };
+          const scan = (node) => {
+            if(node == null) return '';
+            if(typeof node === 'string' || typeof node === 'number' || typeof node === 'boolean') return isMeaningfulText(node) ? String(node) : '';
+            if(Array.isArray(node)){
+              for(const entry of node){
+                const found = scan(entry);
+                if(isMeaningfulText(found)) return found;
+              }
+              return '';
+            }
+            if(typeof node === 'object'){
+              for(const key of answerKeys){
+                if(Object.prototype.hasOwnProperty.call(node, key)){
+                  const found = scan(node[key]);
+                  if(isMeaningfulText(found)) return found;
+                }
+              }
+              for(const key of fallbackKeys){
+                if(Object.prototype.hasOwnProperty.call(node, key)){
+                  const found = scan(node[key]);
+                  if(isMeaningfulText(found)) return found;
+                }
+              }
+              for(const [key, nested] of Object.entries(node)){
+                if(ignoreKeys.has(key) || /^\d+$/.test(String(key))) continue;
+                const found = scan(nested);
+                if(isMeaningfulText(found)) return found;
+              }
+            }
+            return '';
+          };
+          return scan(item) || 'Sin respuesta guardada.';
+        })();
+        answerValue.textContent = formatChatText(answerText);
+        answerArea.append(answerLabel, answerValue);
+      }
+
       const actions = document.createElement('div');
       actions.className = 'dlg-foot train-actions';
       actions.style.marginTop = '10px';
@@ -669,7 +724,8 @@ function loadTrain(){
       };
       const trainButton = card.querySelector('[data-act=train]');
       if(trainButton) trainButton.onclick = ()=>{
-        const answer = answerInput.value.trim();
+        const answerInput = answerArea.querySelector('textarea');
+        const answer = (answerInput ? answerInput.value : '').trim();
         if(!answer) return alert('Escribe una respuesta antes de entrenar al agente.');
         api('/train', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id, question:questionText, answer})})
           .then(loadTrain)
