@@ -36,6 +36,11 @@ h1{font-size:22px;margin:0 0 4px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.chat-history-header{align-items:flex-start;flex-wrap:wrap}
+.chat-history-meta{justify-content:flex-start;flex-wrap:wrap}
+.chat-history-meta .pill{padding:5px 10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;font-weight:600;line-height:1.35;white-space:nowrap}
+.chat-history-meta .chat-meta-number{border-color:var(--accent);color:var(--accent)}
+.chat-history-meta .chat-expand-label{border-color:var(--accent2);color:var(--accent2)}
 .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;cursor:pointer}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--brand-grad);color:#fff;border:none;font-weight:600}
@@ -359,15 +364,10 @@ function buildStatsSnapshot(data){
     const question = item && (item.question || item.text || item.content || '');
     return !isGreetingQuestion(question);
   });
-  const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
   return JSON.stringify({
     faq: list.slice(0,12).map(item=>({
       q: item.question || item.text || item.content || '',
       c: item.count || item.frequency || 0
-    })),
-    reports: reports.slice(0,12).map(report=>({
-      title: report.title || report.name || report.type || '',
-      detail: report.detail || report.description || report.content || report.text || report.value || ''
     }))
   });
 }
@@ -511,47 +511,54 @@ function loadChats(){
       const chatKey = getChatIdentity(chat);
       const card = document.createElement('div');
       card.className = 'card expand';
-      const firstMessage = Array.isArray(chat.messages) ? chat.messages[0] : null;
-      const contact = chat.phoneNumber || chat.phone || chat.contactNumber || chat.waId || chat.from || chat.remoteJid || chat.senderId || chat.sender?.phone || chat.sender?.number || chat.contact?.phone || chat.contact?.number || chat.metadata?.phone || chat.metadata?.from || firstMessage?.from || firstMessage?.phoneNumber || firstMessage?.phone;
-      const contactNumber = list.length - index;
-      const contactLabel = contact ? String(contact).replace(/@[^@]+$/, '') : `Contacto ${contactNumber}`;
-      const lastMsg = chat.lastMessage || (firstMessage && (firstMessage.content || firstMessage.text)) || '';
-      const dateStr = chat.updatedAt ? new Date(chat.updatedAt).toLocaleString() : '';
+      const lastMessage = Array.isArray(chat.messages) ? chat.messages[chat.messages.length - 1] : null;
+      const phoneValue = chat.phoneNumber || chat.phone || chat.contactNumber || chat.waId || chat.from || chat.remoteJid || chat.senderId || chat.sender?.phone || chat.sender?.number || chat.contact?.phone || chat.contact?.number || chat.contact?.phoneNumber || chat.metadata?.phone || chat.metadata?.from || lastMessage?.from || lastMessage?.phoneNumber || lastMessage?.phone;
+      const phoneNumber = phoneValue ? String(phoneValue).replace(/@[^@]+$/, '') : '';
+      const dateValue = chat.updatedAt || chat.date || chat.lastUpdated || lastMessage?.updatedAt || lastMessage?.date || lastMessage?.timestamp;
+      const parsedDate = dateValue ? new Date(dateValue) : null;
+      const hasValidDate = parsedDate && !Number.isNaN(parsedDate.getTime());
+      const dateStr = hasValidDate ? parsedDate.toLocaleDateString() : 'Sin fecha';
+      const timeStr = hasValidDate ? parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Sin hora';
       const isExpanded = previouslyExpanded.has(chatKey);
 
       const header = document.createElement('div');
-      header.className = 'row';
-      const summary = document.createElement('div');
-      const contactTitle = document.createElement('b');
-      contactTitle.textContent = contactLabel;
-      const preview = document.createElement('div');
-      preview.className = 'chunks';
-      preview.textContent = formatChatText(lastMsg);
+      header.className = 'row chat-history-header';
       const badges = document.createElement('div');
-      badges.className = 'row';
+      badges.className = 'row chat-history-meta';
       const chatId = document.createElement('span');
-      chatId.className = 'pill';
-      chatId.textContent = `#${contactNumber}`;
+      chatId.className = 'pill chat-meta-number';
+      chatId.textContent = String(index + 1);
+      const phone = document.createElement('span');
+      phone.className = 'pill';
+      phone.textContent = `Teléfono: ${phoneNumber || 'No disponible'}`;
       const date = document.createElement('span');
       date.className = 'pill';
-      date.textContent = dateStr;
+      date.textContent = `Fecha: ${dateStr}`;
+      const time = document.createElement('span');
+      time.className = 'pill';
+      time.textContent = `Hora: ${timeStr}`;
+      const expandLabel = document.createElement('span');
+      expandLabel.className = 'pill chat-expand-label';
+      expandLabel.textContent = isExpanded ? 'Ocultar conversación' : 'Ver conversación';
       const messages = document.createElement('div');
       messages.className = 'msgs hidden';
       messages.style.marginTop = '10px';
       if(isExpanded) messages.classList.remove('hidden');
 
-      summary.append(contactTitle, preview);
-      badges.append(chatId, date);
-      header.append(summary, badges);
+      badges.append(chatId);
+      badges.append(phone, date, time, expandLabel);
+      header.append(badges);
       card.append(header, messages);
 
       card.onclick = ()=>{
         if(messages.classList.contains('hidden')){
           expandedChatIds.add(chatKey);
           messages.classList.remove('hidden');
+          expandLabel.textContent = 'Ocultar conversación';
         }else{
           expandedChatIds.delete(chatKey);
           messages.classList.add('hidden');
+          expandLabel.textContent = 'Ver conversación';
         }
         if(!messages.dataset.loaded){
           messages.dataset.loaded = '1';
@@ -661,9 +668,8 @@ function loadStats(){
       const question = item && (item.question || item.text || item.content || '');
       return !isGreetingQuestion(question);
     });
-    const reports = Array.isArray(data) ? [] : (data.reports || data.reportes || []);
     lastTabSnapshots.stats = buildStatsSnapshot(data);
-    if(!list.length && !reports.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
+    if(!list.length){ c.innerHTML = '<div class="empty">Todavía no hay suficientes datos.</div>'; return; }
 
     const questionsBlock = document.createElement('section');
     questionsBlock.className = 'faq-block';
@@ -691,33 +697,7 @@ function loadStats(){
       });
     }
 
-    const reportsBlock = document.createElement('section');
-    reportsBlock.className = 'faq-block';
-    const reportsHeading = document.createElement('div');
-    reportsHeading.className = 'faq-heading';
-    reportsHeading.innerHTML = '<h2>Reportes</h2><span>Resumen de actividad</span>';
-    reportsBlock.appendChild(reportsHeading);
-    if(!reports.length){
-      const emptyReports = document.createElement('div');
-      emptyReports.className = 'empty';
-      emptyReports.textContent = 'No hay reportes disponibles.';
-      reportsBlock.appendChild(emptyReports);
-    }else{
-      reports.forEach(report=>{
-        const item = typeof report === 'object' ? report : {detail:report};
-        const reportCard = document.createElement('div');
-        reportCard.className = 'report-item';
-        const title = document.createElement('p');
-        title.className = 'report-title';
-        title.textContent = formatChatText(item.title || item.name || item.type || 'Reporte');
-        const detail = document.createElement('p');
-        detail.className = 'report-detail';
-        detail.textContent = formatChatText(item.detail || item.description || item.content || item.text || item.value || '');
-        reportCard.append(title, detail);
-        reportsBlock.appendChild(reportCard);
-      });
-    }
-    c.replaceChildren(questionsBlock, reportsBlock);
+    c.replaceChildren(questionsBlock);
   }).catch(()=> errorState(c, 'estadísticas'));
 }
 
@@ -898,13 +878,15 @@ function loadTrain(){
         answerArea.append(answerLabel, answerValue);
       }
 
-      const actions = document.createElement('div');
-      actions.className = 'dlg-foot train-actions';
-      actions.style.marginTop = '10px';
-      actions.innerHTML = trainFilter === 'pending'
-        ? '<button class="btn danger" data-act="reject">Rechazar</button><button class="btn warn" data-act="train">Añadir a la base de conocimiento</button>'
-        : '<span class="chunks">Estado: ' + (trainFilter === 'completed' ? 'Completada' : 'Rechazada') + '</span>';
-      card.append(questionElement, dateElement, answerArea, actions);
+      if(trainFilter === 'pending'){
+        const actions = document.createElement('div');
+        actions.className = 'dlg-foot train-actions';
+        actions.style.marginTop = '10px';
+        actions.innerHTML = '<button class="btn danger" data-act="reject">Rechazar</button><button class="btn warn" data-act="train">Añadir a la base de conocimiento</button>';
+        card.append(questionElement, dateElement, answerArea, actions);
+      }else{
+        card.append(questionElement, dateElement, answerArea);
+      }
       const rejectButton = card.querySelector('[data-act=reject]');
       if(rejectButton) rejectButton.onclick = ()=>{
         api('/pending-questions/discard', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:item.id})}).then(loadTrain);
