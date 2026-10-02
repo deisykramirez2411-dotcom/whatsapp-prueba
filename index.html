@@ -818,6 +818,13 @@ function formatChatText(value){
   }
 
   let text = String(value).replace(/\\n/g, '\n');
+
+  // Quitar expresiones/placeholders de n8n como {{ $json.body.payload.body }}
+  text = text.replace(/\{\{\s*\$json\.[^}]+\}\}/g, '').trim();
+
+  // Quitar prefijos estáticos si vienen incluidos en la base de datos
+  text = text.replace(/^(Cliente|Agente|User|Assistant):\s*/i, '').trim();
+
   try{
     const parsed = JSON.parse(text);
     if(parsed && typeof parsed === 'object') return formatChatText(parsed);
