@@ -1179,7 +1179,29 @@ function formatChatText(value){
   return template.content.textContent.replace(/\n{3,}/g, '\n\n').trim();
 }
 
+function isUnansweredChatMessage(message){
+  if(message.role === 'user' || message.type === 'human') return false;
+  const text = formatChatText(message?.content || message?.text || message?.response || message)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+  const rawMessage = JSON.stringify(message);
+  const searchableMessage = `${text} ${rawMessage || ''}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  if(/\bunanswered[\s_-]*question\b/.test(searchableMessage)) return true;
+
+  const responseText = text.replace(/\bunanswered[\s_-]*question\b/g, ' ').trim();
+  return /(?:^|[.!?]\s*)(?:no tengo informacion(?: especifica)?|no cuento con informacion(?: especifica)?|no dispongo de informacion(?: especifica)?|no encontre informacion sobre|no se encontro informacion sobre|no tengo datos suficientes para responder|no puedo responder a esa pregunta)(?:\s|[.,:;!?]|$)/.test(responseText);
+}
+
 function getVisibleChatMessages(chatMessages){
+  chatMessages = chatMessages.filter(message=>
+    message.role === 'user' || message.type === 'human' || !isUnansweredChatMessage(message)
+  );
   const messageWords = chatMessages.map(message=>{
     const text = formatChatText(message.content || message.text || message.response || message);
     const words = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [];
