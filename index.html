@@ -763,7 +763,7 @@ function loadChats(){
         }
         if(!messages.dataset.loaded){
           messages.dataset.loaded = '1';
-          const chatMessages = Array.isArray(chat.messages) ? chat.messages : [];
+          const chatMessages = getVisibleChatMessages(Array.isArray(chat.messages) ? chat.messages : []);
           if(!chatMessages.length){
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'msg';
@@ -785,7 +785,7 @@ function loadChats(){
 
       if(isExpanded && !messages.dataset.loaded){
         messages.dataset.loaded = '1';
-        const chatMessages = Array.isArray(chat.messages) ? chat.messages : [];
+        const chatMessages = getVisibleChatMessages(Array.isArray(chat.messages) ? chat.messages : []);
         if(!chatMessages.length){
           const emptyMessage = document.createElement('div');
           emptyMessage.className = 'msg';
@@ -829,6 +829,32 @@ function formatChatText(value){
     .replace(/<\/(p|div|li|h[1-6])\s*>/gi, '\n');
   template.content.querySelectorAll('script, style').forEach(element=>element.remove());
   return template.content.textContent.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function getVisibleChatMessages(chatMessages){
+  const messageWords = chatMessages.map(message=>{
+    const text = formatChatText(message.content || message.text || message.response || message);
+    const words = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]+/g) || [];
+    return new Set(words);
+  });
+
+  return chatMessages.filter((message,index)=>{
+    if(message.role === 'user' || message.type === 'human') return true;
+    const words = messageWords[index];
+    if(words.size < 8) return true;
+
+    for(let nextIndex = index + 1; nextIndex < chatMessages.length; nextIndex++){
+      const nextMessage = chatMessages[nextIndex];
+      if(nextMessage.role === 'user' || nextMessage.type === 'human') break;
+
+      const nextWords = messageWords[nextIndex];
+      if(nextWords.size < 8) continue;
+      const sharedWords = Array.from(words).filter(word=>nextWords.has(word)).length;
+      const similarity = sharedWords / (words.size + nextWords.size - sharedWords);
+      if(similarity >= 0.8) return false;
+    }
+    return true;
+  });
 }
 
 function applyDocsSearch(){
