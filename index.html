@@ -30,7 +30,7 @@ nav{width:248px;flex:none;background:var(--panel);border-right:1px solid var(--l
 .tab.active{position:relative}
 .tab.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--brand-grad)}
 .cfgbtn{margin-top:24px;width:100%;padding:10px 12px;border-radius:8px;border:1px dashed var(--line);background:none;color:var(--muted);font-size:13px;cursor:pointer}
-main{display:flex;flex:1;flex-direction:column;padding:28px 32px;max-width:920px}
+main{display:flex;flex:1;flex-direction:column;min-width:0;width:100%;padding:28px 32px}
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:13px;margin:0 0 22px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
@@ -40,6 +40,9 @@ h1{font-size:22px;margin:0 0 4px}
 .chat-history-meta{justify-content:flex-start;flex-wrap:wrap}
 .chat-history-meta .pill{padding:5px 10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:12px;font-weight:600;line-height:1.35;white-space:nowrap}
 .chat-history-meta .chat-meta-number{border-color:var(--accent);color:var(--accent)}
+.chat-history-meta .chat-meta-phone{border-color:#25d366;background:rgba(37,211,102,.1);color:#25d366}
+.chat-history-meta .chat-meta-date{border-color:#60a5fa;background:rgba(96,165,250,.1);color:#60a5fa}
+.chat-history-meta .chat-meta-time{border-color:#f59e0b;background:rgba(245,158,11,.1);color:#f59e0b}
 .chat-history-meta .chat-expand-label{border-color:var(--accent2);color:var(--accent2)}
 .chat-filter-panel{display:grid;grid-template-columns:minmax(240px,1.15fr) minmax(300px,1fr) auto;align-items:end;gap:14px;padding:16px;margin:0 0 12px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px;background:linear-gradient(110deg,rgba(41,194,230,.09),rgba(74,222,128,.05))}
 .chat-filter-field{display:block;margin:0;color:var(--text);font-size:11px;font-weight:600}
@@ -63,10 +66,21 @@ h1{font-size:22px;margin:0 0 4px}
 .docs-result-count{flex:none;margin:0 0 9px;color:var(--accent);font-size:12px;font-weight:600}
 .docs-search-hidden{display:none!important}
 .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;cursor:pointer}
+button{transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease}
+button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.18);cursor:pointer}
+button:not(:disabled):active{transform:scale(.94) translateY(1px);box-shadow:0 1px 4px rgba(0,0,0,.2);transition-duration:.06s}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@keyframes button-selected{0%{transform:scale(.92)}65%{transform:scale(1.04)}100%{transform:scale(1)}}
+.tab.active,.status-tab.active,.faq-frequency-toggle button[aria-pressed="true"]{animation:button-selected .24s ease-out}
 .btn:hover{border-color:var(--accent)}
 .btn.primary{background:var(--brand-grad);color:#fff;border:none;font-weight:600}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
 .btn.warn{background:var(--accent2);color:#0b0e14;border-color:var(--accent2);font-weight:600}
+@media(prefers-reduced-motion:reduce){
+  button{transition:none}
+  button:not(:disabled):hover,button:not(:disabled):active{transform:none}
+  .tab.active,.status-tab.active,.faq-frequency-toggle button[aria-pressed="true"]{animation:none}
+}
 input,textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;font-family:inherit}
 textarea{resize:vertical;min-height:64px}
 label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
@@ -481,11 +495,11 @@ function parseChatDateFilter(value){
 }
 
 function getChatActivityTimestamp(chat){
-  const chatDates = [chat.updatedAt, chat.lastUpdated, chat.lastMessageAt, chat.last_message_at, chat.date, chat.createdAt, chat.timestamp];
   const messageDates = Array.isArray(chat.messages)
-    ? chat.messages.flatMap(message=>[message?.updatedAt, message?.date, message?.timestamp, message?.createdAt, message?.sentAt])
+    ? chat.messages.flatMap(message=>[message?.date, message?.timestamp, message?.createdAt, message?.sentAt])
     : [];
-  return [...chatDates, ...messageDates].reduce((latest, value)=>{
+  const timestamps = [...messageDates, chat.lastMessageAt, chat.last_message_at];
+  return timestamps.reduce((latest, value)=>{
     const parsed = parseChatDate(value);
     return parsed ? Math.max(latest, parsed.getTime()) : latest;
   }, 0);
@@ -730,13 +744,13 @@ function loadChats(){
       chatId.className = 'pill chat-meta-number';
       chatId.textContent = String(list.length - index);
       const phone = document.createElement('span');
-      phone.className = 'pill';
+      phone.className = 'pill chat-meta-phone';
       phone.textContent = `Teléfono: ${phoneNumber || 'No disponible'}`;
       const date = document.createElement('span');
-      date.className = 'pill';
+      date.className = 'pill chat-meta-date';
       date.textContent = `Fecha: ${dateStr}`;
       const time = document.createElement('span');
-      time.className = 'pill';
+      time.className = 'pill chat-meta-time';
       time.textContent = `Hora: ${timeStr}`;
       const expandLabel = document.createElement('span');
       expandLabel.className = 'pill chat-expand-label';
