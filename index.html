@@ -654,13 +654,17 @@ function normalizeChatSearch(value){
 
 function parseChatDate(value){
   if(value == null || value === '') return null;
+  if(typeof value === 'object'){
+    const nestedTimestamp = value.seconds ?? value._seconds ?? value.timestamp ?? value.$date ?? value.date;
+    return nestedTimestamp == null || nestedTimestamp === value ? null : parseChatDate(nestedTimestamp);
+  }
   if(typeof value === 'number'){
     const timestamp = new Date(value < 100000000000 ? value * 1000 : value);
     return Number.isNaN(timestamp.getTime()) ? null : timestamp;
   }
   const text = String(value).trim();
   if(/^\d{10,13}$/.test(text)) return parseChatDate(Number(text));
-  const dayFirst = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
+  const dayFirst = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i);
   if(dayFirst){
     const day = Number(dayFirst[1]);
     const month = Number(dayFirst[2]);
@@ -677,7 +681,8 @@ function parseChatDate(value){
     if(parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day || minute > 59 || second > 59) return null;
     return parsed;
   }
-  const parsed = new Date(text);
+  const normalizedText = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(text) ? text.replace(/\s+/, 'T') : text;
+  const parsed = new Date(normalizedText);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
@@ -693,14 +698,50 @@ function parseChatDateFilter(value){
 }
 
 function getChatActivityTimestamp(chat){
-  const messageDates = Array.isArray(chat.messages)
-    ? chat.messages.flatMap(message=>[message?.date, message?.timestamp, message?.createdAt, message?.sentAt])
-    : [];
-  const timestamps = [...messageDates, chat.lastMessageAt, chat.last_message_at];
-  return timestamps.reduce((latest, value)=>{
+  const collectDates = (value, depth=0)=>{
+    if(value == null || depth > 8) return [];
+    if(Array.isArray(value)) return value.flatMap(item=>collectDates(item, depth + 1));
+    if(typeof value !== 'object') return [];
+    const entries = Object.entries(value);
+    const candidates = [];
+    const dateKeys = entries.filter(([key])=>
+      /date|timestamp|created|sent|received|message.?at/i.test(key)
+      && !/updated|modified|edited/i.test(key)
+    );
+    dateKeys.forEach(([key,nested])=>{
+      const parsed = parseChatDate(nested);
+      if(parsed) candidates.push(parsed.getTime());
+
+      const separateTime = entries.find(([timeKey])=>
+        /^(time|hour|message_time|sent_time|created_time)$/i.test(timeKey)
+      )?.[1];
+      if(separateTime != null && typeof nested === 'string' && typeof separateTime === 'string'){
+        const datePart = nested.trim();
+        const timePart = separateTime.trim();
+        if(/^\d{1,2}:\d{2}(?::\d{2})?$/.test(timePart)){
+          const combined = parseChatDate(`${datePart} ${timePart}`);
+          if(combined) candidates.push(combined.getTime());
+        }
+      }
+      if(nested && typeof nested === 'object') candidates.push(...collectDates(nested, depth + 1));
+    });
+    entries.forEach(([key,nested])=>{
+      if(!/date|timestamp|created|sent|received|message|conversation|metadata|data|payload/i.test(key)
+        || /updated|modified|edited/i.test(key)) return;
+      if(nested && typeof nested === 'object') candidates.push(...collectDates(nested, depth + 1));
+    });
+    return candidates;
+  };
+
+  const messageDates = Array.isArray(chat.messages) ? collectDates(chat.messages) : [];
+  const messageTimestamps = [...messageDates, chat.lastMessageAt, chat.last_message_at].reduce((latest, value)=>{
     const parsed = parseChatDate(value);
     return parsed ? Math.max(latest, parsed.getTime()) : latest;
   }, 0);
+  if(messageTimestamps) return messageTimestamps;
+
+  const conversationDates = collectDates(chat);
+  return conversationDates.length ? Math.max(...conversationDates) : 0;
 }
 
 function applyChatFilters(resetPage=false){
