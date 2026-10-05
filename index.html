@@ -92,6 +92,17 @@ h1{font-size:22px;margin:0 0 4px}
 .docs-search-field input{display:block;margin-top:6px}
 .docs-result-count{flex:none;margin:0 0 9px;color:var(--accent);font-size:12px;font-weight:600}
 .docs-search-hidden{display:none!important}
+.doc-actions{display:flex;flex:none;gap:8px}
+.btn.doc-view-btn{border-color:#25d366;background:rgba(37,211,102,.12);color:#25d366;font-weight:600}
+.btn.doc-view-btn:hover{border-color:#25d366;background:#25d366;color:#08210f}
+.doc-preview-dialog{width:min(900px,94vw);max-height:min(85vh,900px)}
+.doc-preview-body{display:flex;max-height:85vh;flex-direction:column;padding:20px}
+.doc-preview-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.doc-preview-header h2{min-width:0;margin:0;font-size:18px;overflow-wrap:anywhere}
+.doc-preview-content{min-height:180px;max-height:65vh;overflow:auto;padding:16px 4px 4px;color:var(--text);font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.doc-preview-frame{width:100%;height:min(65vh,680px);margin-top:14px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.doc-preview-link{align-self:flex-start;margin-top:12px;color:var(--accent);font-size:12px}
+.doc-preview-empty{color:var(--muted)}
 .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13px;cursor:pointer}
 button{transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease}
 button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.18);cursor:pointer}
@@ -472,6 +483,17 @@ input[type="file"]::file-selector-button{margin-right:10px;padding:7px 10px;bord
       <button class="btn primary" id="passwordSave" type="submit">Guardar contraseña</button>
     </div>
   </form>
+</dialog>
+<dialog id="docPreviewDialog" class="doc-preview-dialog">
+  <div class="doc-preview-body">
+    <div class="doc-preview-header">
+      <h2 id="docPreviewTitle">Vista del documento</h2>
+      <button class="btn" id="docPreviewClose" type="button" aria-label="Cerrar vista del documento">Cerrar</button>
+    </div>
+    <div id="docPreviewContent" class="doc-preview-content"></div>
+    <iframe id="docPreviewFrame" class="doc-preview-frame hidden" title="Vista previa del documento" sandbox="allow-same-origin"></iframe>
+    <a id="docPreviewLink" class="doc-preview-link hidden" target="_blank" rel="noopener noreferrer">Abrir archivo en otra pestaña</a>
+  </div>
 </dialog>
 
 <script>
@@ -1312,9 +1334,22 @@ function loadDocs(){
       const card = document.createElement('div');
       card.className = 'card row';
       card.dataset.docSearch = normalizeChatSearch(JSON.stringify(doc));
-      card.innerHTML = `<div><b>${doc.name||doc.source||'Documento'}</b></div>
-      <button class="btn danger" data-act="delete">Eliminar</button>`;
-      card.querySelector('[data-act=delete]').onclick = ()=>{
+      const title = document.createElement('b');
+      title.textContent = doc.name || doc.source || 'Documento';
+      const actions = document.createElement('div');
+      actions.className = 'doc-actions';
+      const viewButton = document.createElement('button');
+      viewButton.className = 'btn doc-view-btn';
+      viewButton.type = 'button';
+      viewButton.textContent = 'Ver';
+      viewButton.onclick = ()=>showDocumentPreview(doc);
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'btn danger';
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Eliminar';
+      actions.append(viewButton, deleteButton);
+      card.append(title, actions);
+      deleteButton.onclick = ()=>{
         if(!confirm('¿Eliminar este documento de la base de conocimiento?')) return;
         api('/documents/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:doc.id})})
           .then(loadDocs).catch(()=>alert('No se pudo eliminar el documento.'));
@@ -1324,6 +1359,78 @@ function loadDocs(){
     applyDocsSearch();
   }).catch(()=> errorState(c, 'documentos'));
 }
+
+function getDocumentText(value, depth=0){
+  if(value == null || depth > 8) return '';
+  if(typeof value === 'string'){
+    const text = formatChatText(value);
+    return text.length > 100000 ? `${text.slice(0,100000)}\n\n[Vista previa truncada]` : text;
+  }
+  if(Array.isArray(value)){
+    return value.map(item=>getDocumentText(item, depth + 1)).filter(Boolean).join('\n\n');
+  }
+  if(typeof value !== 'object') return '';
+  const contentKeys = ['pageContent','content','text','extractedText','body','chunk','document','markdown','html'];
+  for(const key of contentKeys){
+    if(Object.prototype.hasOwnProperty.call(value,key)){
+      const text = getDocumentText(value[key], depth + 1);
+      if(text) return text;
+    }
+  }
+  for(const [key,nested] of Object.entries(value)){
+    if(['metadata','json','data','payload','document'].includes(key.toLowerCase())){
+      const text = getDocumentText(nested, depth + 1);
+      if(text) return text;
+    }
+  }
+  return '';
+}
+
+function getDocumentUrl(doc){
+  const candidates = [doc.url,doc.fileUrl,doc.file_url,doc.downloadUrl,doc.download_url,doc.webViewLink,doc.link,doc.metadata?.url,doc.metadata?.fileUrl];
+  const value = candidates.find(candidate=>typeof candidate === 'string' && candidate.trim());
+  if(!value) return '';
+  try{
+    const url = new URL(value, `${cfg.base.replace(/\/$/,'')}/`);
+    return ['http:','https:'].includes(url.protocol) ? url.href : '';
+  }catch{
+    return '';
+  }
+}
+
+function showDocumentPreview(doc){
+  const dialog = $('#docPreviewDialog');
+  const title = doc.name || doc.source || 'Documento';
+  const content = getDocumentText(doc);
+  const url = getDocumentUrl(doc);
+  const contentElement = $('#docPreviewContent');
+  const frame = $('#docPreviewFrame');
+  const link = $('#docPreviewLink');
+  $('#docPreviewTitle').textContent = title;
+  contentElement.textContent = content || (url
+    ? 'El archivo está disponible para abrirse en el visor.'
+    : 'Este registro no incluye texto extraído ni un enlace al archivo original.');
+  contentElement.classList.toggle('doc-preview-empty', !content);
+  frame.classList.add('hidden');
+  frame.removeAttribute('src');
+  link.classList.add('hidden');
+  link.removeAttribute('href');
+
+  if(url){
+    const pathname = new URL(url).pathname.toLowerCase();
+    const canEmbed = /\.(pdf|png|jpe?g|gif|webp|txt)$/i.test(pathname);
+    if(canEmbed){
+      frame.src = url;
+      frame.classList.remove('hidden');
+    }
+    link.href = url;
+    link.classList.remove('hidden');
+  }
+  dialog.showModal();
+}
+
+$('#docPreviewClose').onclick = ()=>$('#docPreviewDialog').close();
+
 $('#uploadBtn').onclick = ()=>{
   const f = $('#fileInput').files[0];
   if(!f) return alert('Elige un archivo primero.');
